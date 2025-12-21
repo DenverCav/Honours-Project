@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+<h2>Leaderboard</h2>
+<table class="table table-striped">
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>Score</th>
+<th>Game</th>
+</tr>
+</thead>
+<tbody>
+       {% for entry in leaderboard %}
+<tr>
+<td>{{ loop.index }}</td>
+<td>{{ entry.username }}</td>
+<td>{{ entry.score }}</td>
+<td>{{ entry.game }}</td>
+</tr>
+       {% endfor %}
+</tbody>
+</table>
+{% endblock %}
