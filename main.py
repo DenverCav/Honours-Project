@@ -19,6 +19,18 @@ discord_bp = make_discord_blueprint(
 )
 app.register_blueprint(discord_bp, url_prefix="/login")
 
+@app.context_processor
+def createUser():
+    if discord.authorized:
+        resp = discord.get("/api/users/@me")
+        if resp.ok:
+            user = resp.json()
+            return {
+                "logged_in": True,
+                "user_pfp": f"https://cdn.discordapp.com/avatars/{user['id']}/{user['avatar']}.png",
+                "username": user["username"]
+            }
+        return {"logged_in": False}
 #Routes between pages here
 
 @app.route("/")
@@ -29,8 +41,8 @@ def home():
 @app.route("/leaderboard")
 def leaderboard():
     #Placeholder stuff here:
-    leaderboard_data = [ {"username": "Denver", "score": 3300000, "game": "Tetris.com"},
-                         {"username": "Ace", "score": 3600000, "game": "Tetris.com"}]
+    leaderboard_data = [ {"username": "Ace", "score": 3600000, "game": "Tetris.com"},
+                         {"username": "Denver", "score": 3300000, "game": "Tetris.com"}]
     return render_template("leaderboard.html", leaderboard=leaderboard_data)
 
 @app.route("/profile")
@@ -46,7 +58,9 @@ def profile():
                            "id": user_info["id"],
                           "avatar_url": f"https://cdn.discordapp.com/avatars/{user_info['id']}/{user_info['avatar']}.png"
                          })
-
+@app.route("/submitScore")
+def submitScore():
+    return render_template("submit_score.html")
 
 
 
