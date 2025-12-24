@@ -1,5 +1,5 @@
 import os
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+#os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
@@ -18,19 +18,22 @@ discord_bp = make_discord_blueprint(
     scope="identify"
 )
 app.register_blueprint(discord_bp, url_prefix="/login")
+#One night the context_processor just stopped working and I don't know why, I shouldn't have to know why
+#and I shouldn't need tp wonder why. Gut it got fixed...
 
 @app.context_processor
 def createUser():
     if discord.authorized:
         resp = discord.get("/api/users/@me")
         if resp.ok:
-            user = resp.json()
+            user = resp.json() # To save this to the database later (tm)
             return {
                 "logged_in": True,
                 "user_pfp": f"https://cdn.discordapp.com/avatars/{user['id']}/{user['avatar']}.png",
                 "username": user["username"]
             }
-        return {"logged_in": False}
+    return {"logged_in": False, "user_pfp": None, "username": None}
+
 #Routes between pages here
 
 @app.route("/")
@@ -78,9 +81,22 @@ def admin_add_score_route():
 def about():
    return render_template("about.html")
 
-@app.route("/login")
+@app.route("/logout")
+def logout():
+    token = discord_bp.token
+    if token:
+        del discord_bp.token
+    session.clear()
+    return render_template("home.html")
+
+@app.route("/login") # Everything breaks if I get rid of this
 def login():
-    return render_template("login.html")
+    if not discord.authorized:
+        return redirect(url_for("discord.login"))
+
+    resp = discord.get("/api/users/@me")
+    user_info = resp.json()
+    return render_template("home.html")
 
 
 # ---------- RUN APP ----------
