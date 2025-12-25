@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+<h2>
+    {% if is_admin %}
+        Submit Official Leaderboard Score
+    {% else %}
+        Submit Personal Score
+    {% endif %}
+</h2>
+
+    <p class = "text-muted">
+        {% if is_admin %}
+            This score will appear on the overall leaderboard, not your own.
+        {% else %}
+            This score is only viewable to you in your player profile.
+        {% endif %}
+    </p>
+
+    <div class = "mb-3">
+        <!-- Game Dropdown Menu -->
+    <label for="game">Game</label>
+        <select name="game" id = "game" required>
+            <option value="" disabled selected>Choose a game</option>
+            <option value="Tetris.com">Tetris.com</option>
+            <option value="MindBender">MindBender</option>
+            <option value="E60">E60</option>
+            <option value="NBlox">N-Blox</option>
+        </select>
+        <!-- Score -->
+        <label for="score">Score</label>
+        <input
+            type="number"
+            name="score"
+            id="score"
+            min="1"
+            required>
+
+        <!-- Date -->
+        <label for="date_achieved">Date Achieved</label>
+        <input
+            type="date"
+            name="date_achieved"
+            id="date_achieved">
+
+        <!-- Admin field -->
+        {% if is_admin %}
+            <label for="player_name">Player Name</label>
+            <input
+            type="text"
+            name="player_name"
+            id="player_name"
+            placeholder="Please enter the EXACT same that the player uses"
+            required
+            >
+        {% endif %}
+
+        <button type="submit">
+            Submit
+        </button>
+    </div>
+
+
+
+
+</div>
+{% endblock %}
