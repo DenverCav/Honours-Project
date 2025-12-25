@@ -31,7 +31,7 @@ def createUser():
                 "logged_in": True,
                 "user_pfp": f"https://cdn.discordapp.com/avatars/{user['id']}/{user['avatar']}.png",
                 "username": user["username"],
-                "is_admin": False
+                "is_admin": False # To fix a bug right now
             }
     return {"logged_in": False, "user_pfp": None, "username": None}
 
