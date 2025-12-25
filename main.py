@@ -30,7 +30,8 @@ def createUser():
             return {
                 "logged_in": True,
                 "user_pfp": f"https://cdn.discordapp.com/avatars/{user['id']}/{user['avatar']}.png",
-                "username": user["username"]
+                "username": user["username"],
+                "is_admin": False
             }
     return {"logged_in": False, "user_pfp": None, "username": None}
 
@@ -68,15 +69,7 @@ def submitScore():
 
 
 
-@app.route("/add_score")
-def add_score_route():
-   # Placeholder: show form for adding personal scores
-   return render_template("add_score.html")
-@app.route("/admin_add_score")
-def admin_add_score_route():
-   # Placeholder: show form for admins to add official scores
-   return render_template("admin_add_score.html")
-# Optional: simple test page
+
 @app.route("/about")
 def about():
    return render_template("about.html")
