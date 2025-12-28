@@ -1,5 +1,5 @@
 import os
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
+# os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
@@ -16,20 +16,14 @@ discord_bp = make_discord_blueprint(
 app.register_blueprint(discord_bp, url_prefix="/login")
 # Initialises the database
 createDB()
-# --- Context processor for templates ---
 @app.context_processor
-def inject_user():
-   """
-   Makes 'logged_in', 'username', 'user_pfp', and 'is_admin'
-   available in all templates automatically.
-   Uses session as the source of truth.
-   """
+def createUser():
    if "discordID" in session:
        return {
            "logged_in": True,
            "username": session.get("username"),
            "user_pfp": session.get("avatarURL"),
-           "is_admin": False  # Can be updated when admin system added
+           "is_admin": False
        }
    return {
        "logged_in": False,
@@ -94,10 +88,6 @@ def login():
 
 @app.route("/logout")
 def logout():
-   """
-   Logs user out by clearing the session.
-   Redirects to home page.
-   """
    session.clear()
    return redirect(url_for("home"))
 
