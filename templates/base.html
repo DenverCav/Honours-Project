@@ -26,7 +26,7 @@
                            <a class="btn btn-primary" href="{{ url_for('login') }}">Login</a>
                        {% else %}
                        <a href="{{ url_for('logout') }}">
-                           <img src="{{ user_pfp }}" alt="Profile" class="rounded-circle" width="35" height="35">
+                           <img src="{{ user_pfp }}" alt="Log out" class="rounded-circle" width="35" height="35"> <!-- This rubbish would not work for the longest time, but I've got it now -->
                        </a>
                        {% endif %}
                    </li>
@@ -42,7 +42,7 @@
 
    <!-- Footer -->
    <footer class="bg-dark text-light text-center py-3 mt-5">
-       &copy; 2025
+       &copy; This is still in active development, expect bugs and report them here with any other thoughts:
    </footer>
 
    <!-- Bootstrap JS Bundle -->
