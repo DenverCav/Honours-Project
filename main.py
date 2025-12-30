@@ -7,6 +7,8 @@ from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, get
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
+from Logic.isAdmin import ADMIN_IDS, checkAdmin
+
 
 
 app = Flask(__name__)
@@ -35,7 +37,7 @@ def createUser():
            "logged_in": True,
            "username": session.get("username"),
            "user_pfp": session.get("avatarURL"),
-           "is_admin": False
+           "is_admin": checkAdmin(session["discordID"])
        }
    return {
        "logged_in": False,
