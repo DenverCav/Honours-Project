@@ -1,9 +1,9 @@
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
-from flask import Flask, render_template, redirect, url_for, session
+from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebugUsers  # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard  # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -70,9 +70,69 @@ def profile():
    return render_template("profile.html", user=user)
 
 
-@app.route("/submitScore")
+@app.route("/submitScore", methods=["GET", "POST"])
 def submitScore():
-   return render_template("submit_score.html")
+    if "discordID" not in session:
+        return redirect(url_for("login"))
+
+    isAdmin = checkAdmin(session["discordID"])
+
+    if request.method == "POST":
+
+        game = request.form.get("game")
+        score = request.form.get("score", type=int)
+        date_achieved = request.form.get("date_achieved")
+        player_name = request.form.get("player_name") if isAdmin else session["username"]
+        link = request.form.get("link") if isAdmin else ""
+        notes = request.form.get("notes") or ""
+
+        minimumScores = {
+
+            "Tetris.com": 1_500_000,
+            "MindBender": 500_000,
+            "E60": 100_000,
+            "NBlox": 1_000_000
+        }
+
+        # Admin submissions must meet minimum score
+
+        if isAdmin and game in minimumScores and score < minimumScores[game]:
+            flash(f"The score does not meet the minimum for {game}")
+
+            return redirect(url_for("submitScore"))
+
+        # Admin submissions require a player name and link
+
+        if isAdmin and (not player_name or not link):
+            flash("Admin submissions require a player name and a proof link")
+
+            return redirect(url_for("submitScore"))
+
+        # Submit the score
+
+        submitOfficialLeaderboard(
+
+            username=player_name,
+
+            score=score,
+
+            link=link,
+
+            gameType=game,
+
+            submittedBy=session["username"],
+
+            notes=notes
+
+        )
+
+        flash("Score submitted successfully!")
+
+        return redirect(url_for("leaderboard"))
+
+    return render_template("submit_score.html")
+
+
 
 @app.route("/about")
 def about():
@@ -93,7 +153,7 @@ def debug():
 
 @app.route("/debug-database") # I made this to check if the database was actually working, which it is.
 def debugDB():
-    return getDebugUsers()
+    return getDebug()
 
 
 # --- Run app ---

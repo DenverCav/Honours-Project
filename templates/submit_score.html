@@ -34,7 +34,7 @@
             type="number"
             name="score"
             id="score"
-            min="1"
+            step="1"
             required>
 
         <!-- Date -->
@@ -46,6 +46,16 @@
 
         <!-- Admin field -->
         {% if is_admin %}
+
+            <label for="link">Proof Link</label>
+            <input
+                type="url"
+                name="link"
+                id="link"
+                placeholder="Add the link for the screenshot here"
+                required
+            >
+
             <label for="player_name">Player Name</label>
             <input
             type="text"
@@ -54,6 +64,15 @@
             placeholder="Please enter the EXACT same that the player uses"
             required
             >
+
+        <label for="notes">Moderator Notes</label>
+            <textarea
+                name="notes"
+                 id="notes"
+                 rows="3"
+                 placeholder="Optional notes about this submission"
+                >
+            </textarea>
         {% endif %}
 
         <button type="submit">
@@ -65,4 +84,28 @@
 
 
 </div>
+
+
 {% endblock %}
+
+<script>
+    const gameSelection = document.getElementById("game");
+    const scoreInput = document.getElementById("score");
+
+    const minimumScores = {
+    "Tetris.com" = 1500000,
+    "MindBender" = 500000,
+    "E60" = 100000,
+    "NBlox" = 1000000
+    };
+
+    gameSelect.addEventListener("change", () => {
+    const selectedGame = gameSelect.value()
+    const minimumScore = minimumScores[gameSelection];
+
+    if(minimumScore) {
+    scoreInput.min = minimumScore;
+    scoreInput.placeholder = 'The minimum score is: ${minimumScore.toLocaleString())`;
+    }
+    });
+</script>
