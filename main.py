@@ -3,7 +3,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard  # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames  # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -28,6 +28,7 @@ app.config.update(
     )
 
 app.register_blueprint(discord_bp, url_prefix="/login")
+
 # Initialises the database
 #createDB()
 @app.context_processor
@@ -51,10 +52,27 @@ def createUser():
 def home():
    return render_template("home.html")
 
+
 @app.route("/leaderboard")
 def leaderboard():
-    leaderboard_data = tempLeaderboardData()
-    return render_template("leaderboard.html", leaderboard=leaderboard_data or [])
+   # Grab the selected game from query params (from button clicks)
+   selected_game = request.args.get("game")
+   # Get the leaderboard data for that game (or all if None)
+   leaderboard_data = getLeaderboardFromGame(selected_game)
+   # Get all unique games for toggle buttons
+   games = getAllGames()
+
+
+   # Debug print to make sure it looks right
+   print("Games:", games)
+   print("Selected game:", selected_game)
+   print("Leaderboard rows:", len(leaderboard_data))
+   return render_template(
+       "leaderboard.html",
+       leaderboard=leaderboard_data,
+       games=games,
+       selected_game=selected_game
+   )
 
 @app.route("/profile")
 def profile():

@@ -35,7 +35,7 @@ def createDB():
     username TEXT NOT NULL,
     score INTEGER NOT NULL,
     link TEXT NOT NULL,
-    gameType TEXT NOT NULL,
+    gameType TEXT,
     submittedBy TEXT NOT NULL,
     timeSubmitted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notes TEXT
@@ -78,6 +78,32 @@ def getUserByID(discordID):
     conn.close()
     return user
 
+
+def getLeaderboardFromGame(game=None):
+   conn = getConnection()
+   command = conn.cursor()
+   if game:
+       command.execute(
+           "SELECT * FROM publicLeaderboard WHERE gameType = ? ORDER BY score DESC",
+           (game,)  # <-- tuple for binding
+       )
+   else:
+       command.execute(
+           "SELECT * FROM publicLeaderboard ORDER BY score DESC"
+       )
+   rows = command.fetchall()
+   conn.close()
+   return [dict(row) for row in rows]
+
+def getAllGames():
+   conn = getConnection()
+   command = conn.cursor()
+   command.execute("SELECT DISTINCT gameType FROM publicLeaderboard")
+   rows = command.fetchall()
+   conn.close()
+   # Filter out None and sort nicely
+   games = [row["gameType"] for row in rows if row["gameType"]]
+   return sorted(games)
 def tempLeaderboardData():
 # Placeholder leaderboard data
     leaderboard_data = [
