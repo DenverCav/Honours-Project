@@ -1,25 +1,52 @@
+<!-- leaderboard.html -->
+
 {% extends "base.html" %}
-{% block title %}Leaderboard{% endblock %}
+
 {% block content %}
-<h2>Leaderboard</h2>
+<h2 class="mb-4">Leaderboard</h2>
+<!-- Game Toggle Buttons -->
+<div class="btn-group mb-3" role="group">
+<a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary {% if not selected_game %}active{% endif %}">All Scores</a>
+
+  {% for game in games %}
+<a href="{{ url_for('leaderboard', game=game) }}" 
+
+       class="btn btn-outline-primary {% if selected_game == game %}active{% endif %}">
+
+       {{ game }}
+</a>
+
+  {% endfor %}
+</div>
+<!-- Leaderboard Table -->
 <table class="table table-striped">
 <thead>
 <tr>
-<th>Rank</th>
+<th>#</th>
 <th>Player</th>
 <th>Score</th>
 <th>Game</th>
+<th>Proof</th>
+<th>Submitted By</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
-       {% for entry in leaderboard %}
+
+    {% for entry in leaderboard %}
 <tr>
 <td>{{ loop.index }}</td>
 <td>{{ entry.username }}</td>
-<td>{{ entry.score }}</td>
-<td>{{ entry.game }}</td>
+<td>{{ "{:,}".format(entry.score) }}</td>
+<td>{{ entry.gameType }}</td>
+<td><a href="{{ entry.link }}" target="_blank">View</a></td>
+<td>{{ entry.submittedBy }}</td>
+<td>{{ entry.notes }}</td>
 </tr>
-       {% endfor %}
+
+    {% endfor %}
 </tbody>
 </table>
+
 {% endblock %}
+ 

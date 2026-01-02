@@ -22,13 +22,7 @@
                    <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
                    <li class="nav-item"><a class="nav-link" href="{{ url_for('submitScore') }}">Submit Score</a></li>
                    <li class="nav-item">
-                       {% if not logged_in %}
-                           <a class="btn btn-primary" href="{{ url_for('login') }}">Login</a>
-                       {% else %}
-                       <a href="{{ url_for('logout') }}">
-                           <img src="{{ user_pfp }}" alt="Log out" class="rounded-circle" width="35" height="35"> <!-- This rubbish would not work for the longest time, but I've got it now -->
-                       </a>
-                       {% endif %}
+                       {% include 'navbar_auth.html' %}
                    </li>
                </ul>
            </div>

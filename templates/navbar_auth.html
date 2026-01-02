@@ -1,0 +1,11 @@
+{% if not logged_in %}
+    <a class="btn btn-primary" href="{{ url_for('login') }}"
+       onclick="this.innerText='Logging in'; this.classList.add('disabled');">
+        Login
+    </a>
+{% else %}
+    <a href="{{ url_for('logout') }}">
+        <img src="{{ user_pfp or url_for('static', filename='images/Null.png') }}"
+             alt="Log out" class="rounded-circle" width="35" height="35">
+    </a>
+{% endif %}
