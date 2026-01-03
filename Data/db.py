@@ -103,7 +103,7 @@ def getAllGames():
    conn.close()
    # Filter out None and sort nicely
    games = [row["gameType"] for row in rows if row["gameType"]]
-   return sorted(games)
+   return games
 def tempLeaderboardData():
 # Placeholder leaderboard data
     leaderboard_data = [
@@ -137,21 +137,51 @@ def submitOfficialLeaderboard(username, score, link, gameType, submittedBy, note
     conn.commit()
     conn.close()
 
+def getPersonalLeaderboard(discordID):
+    conn = getConnection()
+    command = conn.cursor()
+    command.execute("""
+    SELECT
+    score,
+    gameType
+    FROM personalLeaderboard
+    WHERE discordID = ?
+    """, (discordID, ))
 
+    rows = command.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+def submitPersonalScores(discordID, score, gameType, notes):
+    conn = getConnection()
+    command = conn.cursor()
+    command.execute("""
+    INSERT INTO personalLeaderboard (
+    discordID,
+    score,
+    gameType,
+    notes
+    )
+    VALUES (?, ?, ?, ?)""",
+    (discordID, score, gameType, notes)
+    )
+    conn.commit()
+    conn.close()
 
 def getDebug():
     conn = getConnection()
-    command = conn.cursor()
-    command.execute("DELETE from publicLeaderboard")
     command = conn.cursor()
     command.execute("SELECT discordID, username FROM users")
     users = command.fetchall()
     command.execute("SELECT * FROM publicLeaderboard")
     scores = command.fetchall()
+    command.execute("SELECT * from personalLeaderboard")
+    pLB = command.fetchall()
 
     conn.close()
     return {"users": [dict(u) for u in users],
-            "publicLeaderboard": [dict(s) for s in scores]}
+            "publicLeaderboard": [dict(s) for s in scores],
+            "personalLeaderboard": [dict(d) for d in pLB]}
 
 
 

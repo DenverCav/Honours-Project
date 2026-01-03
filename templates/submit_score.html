@@ -1,111 +1,192 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="container mt-4" style="max-width: 600px;">
-<h2>
-    {% if is_admin %}
-        Submit Official Leaderboard Score
-    {% else %}
-        Submit Personal Score
-    {% endif %}
-</h2>
-
-    <p class = "text-muted">
-        {% if is_admin %}
-            This score will appear on the overall leaderboard, not your own.
-        {% else %}
-            This score is only viewable to you in your player profile.
-        {% endif %}
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4" style="max-width: 600px">
+    <h2>
+        {% if is_admin %} Submit Score {% else %} Submit Personal Score {% endif
+        %}
+    </h2>
+    <p class="text-muted">
+        {% if is_admin %} Choose whether this score goes to the official
+        leaderboard or your personal scores. {% else %} This score is only
+        viewable in your personal profile. {% endif %}
     </p>
-<form method="post">
-    <div class = "mb-3">
-        <!-- Game Dropdown Menu -->
-    <label for="game">Game</label>
-        <select name="game" id = "game" required>
-            <option value="" disabled selected>Choose a game</option>
-            <option value="Tetris.com">Tetris.com</option>
-            <option value="MindBender">MindBender</option>
-            <option value="E60">E60</option>
-            <option value="NBlox">N-Blox</option>
-        </select>
-        <!-- Score -->
-        <label for="score">Score</label>
-        <input
-            type="number"
-            name="score"
-            id="score"
-            step="1"
-            required>
-
-        <!-- Date -->
-        <label for="date_achieved">Date Achieved</label>
-        <input
-            type="date"
-            name="date_achieved"
-            id="date_achieved">
-
-        <!-- Admin field -->
-        {% if is_admin %}
-
-            <label for="link">Proof Link</label>
+    <form method="post">
+        <div class="mb-3">
+            <!-- Game Dropdown Menu -->
+            <label for="game">Game</label>
+            <select name="game" id="game" class="form-select" required>
+                <option value="" disabled selected>Choose a game</option>
+                <option value="Tetris.com">Tetris.com</option>
+                <option value="MindBender">MindBender</option>
+                <option value="E60">E60</option>
+                <option value="NBlox">N-Blox</option>
+            </select>
+            <!-- Score -->
+            <label for="score" class="mt-3">Score</label>
             <input
-                type="url"
-                name="link"
-                id="link"
-                placeholder="Add the link for the screenshot here"
+                type="number"
+                name="score"
+                id="score"
+                class="form-control"
+                step="1"
                 required
-            >
-
-            <label for="player_name">Player Name</label>
+            />
+            <!-- Date -->
+            <label for="date_achieved" class="mt-3">Date Achieved</label>
             <input
-            type="text"
-            name="player_name"
-            id="player_name"
-            placeholder="Please enter the EXACT same that the player uses"
-            required
-            >
+                type="date"
+                name="date_achieved"
+                id="date_achieved"
+                class="form-control"
+            />
 
-        <label for="notes">Moderator Notes</label>
-            <textarea
-                name="notes"
-                 id="notes"
-                 rows="3"
-                 placeholder="Optional notes about this submission"
-                >
-            </textarea>
-        {% endif %}
+            {% if is_admin %}
+            <!-- Admin: Choose destination -->
+            <label class="form-label mt-3">Submit To</label>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="radio"
+                        name="destination"
+                        id="official"
+                        value="official"
+                        checked
+                    />
+                    <label class="form-check-label" for="official"
+                        >Official Leaderboard</label
+                    >
+                </div>
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="radio"
+                        name="destination"
+                        id="personal"
+                        value="personal"
+                    />
+                    <label class="form-check-label" for="personal"
+                        >My Personal Scores</label
+                    >
+                </div>
+            </div>
+            <!-- Official leaderboard fields -->
+            <div id="officialFields">
+                <label for="link">Proof Link</label>
+                <input
+                    type="url"
+                    name="link"
+                    id="link"
+                    class="form-control"
+                    placeholder="Add the link for the screenshot here"
+                    required
+                />
+                <label for="player_name" class="mt-3">Player Name</label>
+                <input
+                    type="text"
+                    name="player_name"
+                    id="player_name"
+                    class="form-control"
+                    placeholder="Enter the exact player name"
+                    required
+                />
+                <label for="notes" class="mt-3">Moderator Notes</label>
+                <textarea
+                    name="notes"
+                    id="notes"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Optional notes about this submission"
+                ></textarea>
+            </div>
 
-        <button type="submit">
-            Submit
-        </button>
-    </div>
-
-</form>
-
-
+            {% endif %}
+            <button type="submit" class="btn btn-primary mt-4">Submit</button>
+        </div>
+    </form>
 </div>
 
-
-{% endblock %}
-
+{% endblock %} {% if is_admin %}
 <script>
-    const gameSelection = document.getElementById("game");
+
+    const gameSelect = document.getElementById("game");
+
     const scoreInput = document.getElementById("score");
 
+    // Minimum scores for validation
+
     const minimumScores = {
-    "Tetris.com" = 1500000,
-    "MindBender" = 500000,
-    "E60" = 100000,
-    "NBlox" = 1000000
+
+        "Tetris.com": 1500000,
+
+        "MindBender": 500000,
+
+        "E60": 100000,
+
+        "NBlox": 1000000
+
     };
 
     gameSelect.addEventListener("change", () => {
-    const selectedGame = gameSelect.value()
-    const minimumScore = minimumScores[gameSelection];
 
-    if(minimumScore) {
-    scoreInput.min = minimumScore;
-    scoreInput.placeholder = 'The minimum score is: ${minimumScore.toLocaleString())`;
-    }
+        const selectedGame = gameSelect.value;
+
+        const minimumScore = minimumScores[selectedGame];
+
+        if (minimumScore) {
+
+            scoreInput.min = minimumScore;
+
+            scoreInput.placeholder = `Minimum score: ${minimumScore.toLocaleString()}`;
+
+        } else {
+
+            scoreInput.min = "";
+
+            scoreInput.placeholder = "";
+
+        }
+
     });
+
+    // Toggle official fields when choosing destination
+
+    const officialRadio = document.getElementById("official");
+
+    const personalRadio = document.getElementById("personal");
+
+    const officialFields = document.getElementById("officialFields");
+
+    function toggleOfficialFields() {
+
+        if (officialRadio.checked) {
+
+            officialFields.style.display = "block";
+
+            // mark required inputs for official leaderboard
+
+            document.getElementById("link").required = true;
+
+            document.getElementById("player_name").required = true;
+
+        } else {
+
+            officialFields.style.display = "none";
+
+            document.getElementById("link").required = false;
+
+            document.getElementById("player_name").required = false;
+
+        }
+
+    }
+
+    officialRadio.addEventListener("change", toggleOfficialFields);
+
+    personalRadio.addEventListener("change", toggleOfficialFields);
+
+    // Initial toggle
+
+    toggleOfficialFields();
 </script>
+
+{% endif %}

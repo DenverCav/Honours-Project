@@ -9,7 +9,7 @@
 <a href="{{ url_for('leaderboard') }}" class="btn btn-outline-primary {% if not selected_game %}active{% endif %}">All Scores</a>
 
   {% for game in games %}
-<a href="{{ url_for('leaderboard', game=game) }}" 
+<a href="{{ url_for('leaderboard', game=game) }}"
 
        class="btn btn-outline-primary {% if selected_game == game %}active{% endif %}">
 
@@ -49,4 +49,3 @@
 </table>
 
 {% endblock %}
- 

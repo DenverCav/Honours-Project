@@ -3,7 +3,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames  # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -55,23 +55,20 @@ def home():
 
 @app.route("/leaderboard")
 def leaderboard():
-   # Grab the selected game from query params (from button clicks)
-   selected_game = request.args.get("game")
-   # Get the leaderboard data for that game (or all if None)
-   leaderboard_data = getLeaderboardFromGame(selected_game)
-   # Get all unique games for toggle buttons
+   selectedGame = request.args.get("game")
+   leaderboardData = getLeaderboardFromGame(selectedGame)
    games = getAllGames()
 
 
    # Debug print to make sure it looks right
    print("Games:", games)
-   print("Selected game:", selected_game)
-   print("Leaderboard rows:", len(leaderboard_data))
+   print("Selected game:", selectedGame)
+   print("Leaderboard rows:", len(leaderboardData))
    return render_template(
        "leaderboard.html",
-       leaderboard=leaderboard_data,
+       leaderboard=leaderboardData,
        games=games,
-       selected_game=selected_game
+       selected_game=selectedGame
    )
 
 @app.route("/profile")
@@ -79,76 +76,77 @@ def profile():
    # Only allow logged-in users
    if "discordID" not in session:
        return redirect(url_for("discord.login"))
-   # Use session data to avoid repeated Discord API calls
    user = {
        "id": session["discordID"],
        "name": session["username"],
        "avatar_url": session["avatarURL"]
    }
-   return render_template("profile.html", user=user)
+
+   personalScores = getPersonalLeaderboard(session["discordID"])
+
+   return render_template("profile.html", user=user, personalScores=personalScores)
 
 
-@app.route("/submitScore", methods=["GET", "POST"])
+@app.route ("/submitScore", methods=["GET", "POST"])
 def submitScore():
     if "discordID" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("discord.login"))
 
-    isAdmin = checkAdmin(session["discordID"])
+    is_admin = checkAdmin(session["discordID"])
 
     if request.method == "POST":
+        game = request.form["game"]
+        score = int(request.form["score"])
+        notes = request.form.get("notes", "")
 
-        game = request.form.get("game")
-        score = request.form.get("score", type=int)
-        date_achieved = request.form.get("date_achieved")
-        player_name = request.form.get("player_name") if isAdmin else session["username"]
-        link = request.form.get("link") if isAdmin else ""
-        notes = request.form.get("notes") or ""
+        # Admins choose destination
 
-        minimumScores = {
+        if is_admin:
+            destination = request.form.get("destination", "official")
 
-            "Tetris.com": 1_500_000,
-            "MindBender": 500_000,
-            "E60": 100_000,
-            "NBlox": 1_000_000
-        }
+            if destination == "official":
+                link = request.form["link"]
+                player_name = request.form["player_name"]
 
-        # Admin submissions must meet minimum score
+                submitOfficialLeaderboard(
+                    username=player_name,
+                    score=score,
+                    link=link,
+                    gameType=game,
+                    submittedBy=session["username"],
+                    notes=notes
 
-        if isAdmin and game in minimumScores and score < minimumScores[game]:
-            flash(f"The score does not meet the minimum for {game}")
+                )
 
-            return redirect(url_for("submitScore"))
+            else:  # personal
 
-        # Admin submissions require a player name and link
+                submitPersonalScores(
+                    discordID=session["discordID"],
+                    score=score,
+                    gameType=game,
+                    notes=notes
 
-        if isAdmin and (not player_name or not link):
-            flash("Admin submissions require a player name and a proof link")
+                )
 
-            return redirect(url_for("submitScore"))
+        # Non-admins always submit personal
 
-        # Submit the score
+        else:
 
-        submitOfficialLeaderboard(
+            submitPersonalScores(
+                discordID=session["discordID"],
+                score=score,
+                gameType=game,
+                notes=notes
 
-            username=player_name,
-
-            score=score,
-
-            link=link,
-
-            gameType=game,
-
-            submittedBy=session["username"],
-
-            notes=notes
-
-        )
-
+            )
         flash("Score submitted successfully!")
+        return redirect(url_for("profile"))
 
-        return redirect(url_for("leaderboard"))
+    return render_template(
+        "submit_score.html",
+        is_admin=is_admin
 
-    return render_template("submit_score.html")
+    );
 
 
 
