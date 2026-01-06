@@ -3,7 +3,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -59,6 +59,9 @@ def leaderboard():
    leaderboardData = getLeaderboardFromGame(selectedGame)
    games = getAllGames()
 
+   if not selectedGame or selectedGame == "all":
+       selectedGame = None
+
 
    # Debug print to make sure it looks right
    print("Games:", games)
@@ -86,69 +89,98 @@ def profile():
 
    return render_template("profile.html", user=user, personalScores=personalScores)
 
-
-@app.route ("/submitScore", methods=["GET", "POST"])
+@app.route("/submitScore", methods=["GET", "POST"])
 def submitScore():
     if "discordID" not in session:
-        return redirect(url_for("discord.login"))
+        return redirect(url_for("login"))
 
-    is_admin = checkAdmin(session["discordID"])
+    isAdmin = checkAdmin(session["discordID"])
 
     if request.method == "POST":
-        game = request.form["game"]
-        score = int(request.form["score"])
-        notes = request.form.get("notes", "")
 
-        # Admins choose destination
+        game = request.form.get("game")
+        score = request.form.get("score", type=int)
+        date_achieved = request.form.get("date_achieved")
+        player_name = request.form.get("player_name") if isAdmin else session["username"]
+        link = request.form.get("link") if isAdmin else ""
+        notes = request.form.get("notes") or ""
 
-        if is_admin:
-            destination = request.form.get("destination", "official")
+        minimumScores = {
 
-            if destination == "official":
-                link = request.form["link"]
-                player_name = request.form["player_name"]
+            "Tetris.com": 1_500_000,
+            "MindBender": 500_000,
+            "E60": 100_000,
+            "NBlox": 1_000_000
+        }
 
-                submitOfficialLeaderboard(
-                    username=player_name,
-                    score=score,
-                    link=link,
-                    gameType=game,
-                    submittedBy=session["username"],
-                    notes=notes
+        # Admin submissions must meet minimum score
 
-                )
+        if isAdmin and game in minimumScores and score < minimumScores[game]:
+            flash(f"The score does not meet the minimum for {game}")
 
-            else:  # personal
+            return redirect(url_for("submitScore"))
 
-                submitPersonalScores(
-                    discordID=session["discordID"],
-                    score=score,
-                    gameType=game,
-                    notes=notes
+        # Admin submissions require a player name and link
 
-                )
+        if isAdmin and (not player_name or not link):
+            flash("Admin submissions require a player name and a proof link")
 
-        # Non-admins always submit personal
+            return redirect(url_for("submitScore"))
 
-        else:
+        # Submit the score
 
-            submitPersonalScores(
-                discordID=session["discordID"],
-                score=score,
-                gameType=game,
-                notes=notes
+        submitOfficialLeaderboard(
 
-            )
+            username=player_name,
+
+            score=score,
+
+            link=link,
+
+            gameType=game,
+
+            submittedBy=session["username"],
+
+            notes=notes
+
+        )
+
         flash("Score submitted successfully!")
-        return redirect(url_for("profile"))
 
-    return render_template(
-        "submit_score.html",
-        is_admin=is_admin
+        return redirect(url_for("leaderboard"))
 
-    );
+    return render_template("submit_score.html")
 
 
+@app.route("/deleteScore", methods=["GET", "POST"])
+def deleteScore():
+    if "discordID" not in session or not checkAdmin(session["discordID"]):
+        return redirect(url_for("login"))
+
+    deleted = None
+
+    if request.method == "POST":
+
+        username = request.form.get("username", "").strip()
+        game = request.form.get("game", "").strip()
+        scoreA = request.form.get("score", "").strip()
+
+        if not username or not game or not scoreA:
+            flash("Fill in all the fields", "warning")
+        else:
+            try:
+                score = int(scoreA)
+            except ValueError:
+                flash("Score must be a number, and without commas", "warning")
+            else:
+                deleted = deleteExactScore(username=username, gameType=game, score=score)
+
+                if deleted:
+                    flash(f"Deleted {score} points for {username} in {game}", "success")
+                else:
+                    flash("That score couldn't be found. Nothing deleted", "success")
+
+    return render_template("delete_score.html")
 
 @app.route("/about")
 def about():

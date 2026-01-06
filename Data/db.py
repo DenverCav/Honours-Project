@@ -83,17 +83,39 @@ def getLeaderboardFromGame(game=None):
    conn = getConnection()
    command = conn.cursor()
    if game:
-       command.execute(
-           "SELECT * FROM publicLeaderboard WHERE gameType = ? ORDER BY score DESC",
-           (game,)  # <-- tuple for binding
+       command.execute("""
+       SELECT *
+       FROM publicLeaderboard
+       WHERE id IN (
+           SELECT MAX(id)
+           FROM publicLeaderboard
+           WHERE gameType = ?
+           GROUP BY username
        )
+       ORDER BY score DESC
+       """, (game,))
    else:
-       command.execute(
-           "SELECT * FROM publicLeaderboard ORDER BY score DESC"
+       command.execute("""
+       SELECT *
+       FROM publicLeaderboard
+       WHERE id IN (
+           SELECT MAX(id)
+           FROM publicLeaderboard
+           GROUP BY username, gameType
        )
+       ORDER BY score DESC
+       """)
    rows = command.fetchall()
    conn.close()
    return [dict(row) for row in rows]
+
+def getAllUsers():
+    conn = getConnection()
+    command = conn.cursor()
+    command.execute("SELECT username FROM users")
+    rows = command.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 def getAllGames():
    conn = getConnection()
@@ -137,6 +159,25 @@ def submitOfficialLeaderboard(username, score, link, gameType, submittedBy, note
     conn.commit()
     conn.close()
 
+def deleteOfficialScore(username, gameType, score):
+    conn = getConnection()
+    command = conn.cursor()
+
+    command.execute("""
+    DELETE FROM officialLeaderboard
+    WHERE username = ?
+    AND gameType = ?
+    AND score = ?
+    """,
+    (username, gameType, score)
+    )
+
+    rowsDeleted = command.rowcount
+    conn.commit()
+    conn.close()
+
+    return rowsDeleted > 0
+
 def getPersonalLeaderboard(discordID):
     conn = getConnection()
     command = conn.cursor()
@@ -167,6 +208,21 @@ def submitPersonalScores(discordID, score, gameType, notes):
     )
     conn.commit()
     conn.close()
+
+def deleteExactScore(username, score, gameType):
+    conn = getConnection()
+    command = conn.cursor()
+    command.execute("""DELETE FROM publicLeaderboard 
+                    WHERE username = ?
+                    AND score = ?
+                    AND gameType = ?
+                    """, (username, score, gameType))
+    rowsDeleted = command.rowcount
+
+    conn.commit()
+    conn.close()
+
+    return rowsDeleted > 0
 
 def getDebug():
     conn = getConnection()

@@ -15,7 +15,8 @@
             <label for="game">Game</label>
             <select name="game" id="game" class="form-select" required>
                 <option value="" disabled selected>Choose a game</option>
-                <option value="Tetris.com">Tetris.com</option>
+                <option value="Tetris.com (Untuned)">Tetris.com (Untuned)</option>
+                <option value="Tetris.com (Tuned)">Tetris.com (Tuned)</option>
                 <option value="MindBender">MindBender</option>
                 <option value="E60">E60</option>
                 <option value="NBlox">N-Blox</option>
@@ -103,9 +104,10 @@
             <button type="submit" class="btn btn-primary mt-4">Submit</button>
         </div>
     </form>
-</div>
 
-{% endblock %} {% if is_admin %}
+</div>
+{% endblock %}
+{% if is_admin %}
 <script>
 
     const gameSelect = document.getElementById("game");
