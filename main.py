@@ -3,7 +3,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -64,9 +64,9 @@ def leaderboard():
 
 
    # Debug print to make sure it looks right
-   print("Games:", games)
-   print("Selected game:", selectedGame)
-   print("Leaderboard rows:", len(leaderboardData))
+   #print("Games:", games)
+   #print("Selected game:", selectedGame)
+   #print("Leaderboard rows:", len(leaderboardData))
    return render_template(
        "leaderboard.html",
        leaderboard=leaderboardData,
@@ -86,8 +86,11 @@ def profile():
    }
 
    personalScores = getPersonalLeaderboard(session["discordID"])
+   timeline = getUserScoreTimeline(session["discordID"])
+   dates = [row["timeSubmitted"] for row in timeline]
+   scores = [row["score"] for row in timeline]
 
-   return render_template("profile.html", user=user, personalScores=personalScores)
+   return render_template("profile.html", user=user, personalScores=personalScores, dates=dates, scores=scores)
 
 @app.route("/submitScore", methods=["GET", "POST"])
 def submitScore():
@@ -107,10 +110,10 @@ def submitScore():
 
         minimumScores = {
 
-            "Tetris.com": 1_500_000,
-            "MindBender": 500_000,
-            "E60": 100_000,
-            "NBlox": 1_000_000
+            "Tetris.com": 1500000,
+            "MindBender": 500000,
+            "E60": 100000,
+            "NBlox": 1000000
         }
 
         # Admin submissions must meet minimum score
@@ -132,23 +135,16 @@ def submitScore():
         submitOfficialLeaderboard(
 
             username=player_name,
-
             score=score,
-
             link=link,
-
             gameType=game,
-
             submittedBy=session["username"],
-
             notes=notes
 
         )
 
         flash("Score submitted successfully!")
-
         return redirect(url_for("leaderboard"))
-
     return render_template("submit_score.html")
 
 

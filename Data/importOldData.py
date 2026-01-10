@@ -17,17 +17,11 @@ def importScores():
     for _, row in df.iterrows():
 
         username = row["Name"]
-
         score = int(str(row["Score"]).replace(",", ""))  # Remove commas
-
         link = row["Link"]
-
         notes = row["Notes"]
-
         game_type = row["GameType"]
-
         tuning = row["Tuning"] if row["Tuning"] != "" else "Untuned"
-
         submittedBy = "Historical Leaderboard Data"
 
         # Only add tuning info for Tetris.com
@@ -40,29 +34,21 @@ def importScores():
         command.execute("""
 
             INSERT INTO publicLeaderboard 
-
             (username, score, link, gameType, submittedBy, notes)
-
             VALUES (?, ?, ?, ?, ?, ?)
 
         """, (
 
             username,
-
             score,
-
             link,
-
             game_type,
-
             submittedBy,
-
             notes
 
         ))
 
     conn.commit()
-
     conn.close()
 
     print("Imported the old data successfully!")

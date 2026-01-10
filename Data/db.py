@@ -239,6 +239,16 @@ def getDebug():
             "publicLeaderboard": [dict(s) for s in scores],
             "personalLeaderboard": [dict(d) for d in pLB]}
 
+def getUserScoreTimeline(discordID): #For graphs on the player profile
+    conn = getConnection()
+    command = conn.cursor()
+    command.execute("""SELECT timeSubmitted, score
+                 FROM personalLeaderboard
+                 WHERE discordID = ?
+                 ORDER BY timeSubmitted ASC""", (discordID, ))
+    rows = command.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 
 if __name__ == "__main__":

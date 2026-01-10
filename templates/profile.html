@@ -44,6 +44,108 @@ content %}
 
 {% endif %}
 
+    <h4 class="mt-5">Score Progression</h4>
+
+{% if scores %}
+<canvas id="scoreChart" style="max-width:100%; height:300px;"></canvas>
+
+{% else %}
+<p class="text-muted">No scores yet to display.</p>
+
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+const ctx = document.getElementById('scoreChart');
+
+const scoreChart = new Chart(ctx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: {{ dates | tojson }},
+
+        datasets: [{
+
+            label: 'Score',
+
+            data: {{ scores | tojson }},
+
+            borderColor: '#4dabf7',
+
+            backgroundColor: '#4dabf7',
+
+            borderWidth: 2,
+
+            tension: 0.3,
+
+            fill: false
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        plugins: {
+
+            tooltip: {
+
+                mode: 'index',
+
+                intersect: false
+
+            },
+
+            legend: {
+
+                display: false
+
+            }
+
+        },
+
+        scales: {
+
+            y: {
+
+                beginAtZero: true,
+
+                ticks: {
+
+                    callback: function(value) {
+
+                        return value.toLocaleString(); // add commas
+
+                    }
+
+                }
+
+            },
+
+            x: {
+
+                ticks: {
+
+                    autoSkip: true,
+
+                    maxTicksLimit: 10
+
+                }
+
+            }
+
+        }
+
+    }
+
+});
+</script>
+
+
 </div>
 <!-- End of main container mt-4 div -->
 {% endblock %}
