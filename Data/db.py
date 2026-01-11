@@ -183,8 +183,10 @@ def getPersonalLeaderboard(discordID):
     command = conn.cursor()
     command.execute("""
     SELECT
+    id,
     score,
-    gameType
+    gameType,
+    timeSubmitted
     FROM personalLeaderboard
     WHERE discordID = ?
     """, (discordID, ))
@@ -249,6 +251,18 @@ def getUserScoreTimeline(discordID): #For graphs on the player profile
     rows = command.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+def deletePersonalScoreForUser(discordID, scoreID):
+    conn = getConnection()
+    command = conn.cursor()
+    command.execute("""
+    DELETE FROM personalLeaderboard
+    WHERE id = ? AND discordID = ?
+    """, (scoreID, discordID))
+    rowsDeleted = command.rowcount
+    conn.commit()
+    conn.close()
+    return rowsDeleted > 0
 
 
 if __name__ == "__main__":

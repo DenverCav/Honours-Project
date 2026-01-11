@@ -3,7 +3,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline, deletePersonalScoreForUser # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -74,23 +74,62 @@ def leaderboard():
        selected_game=selectedGame
    )
 
+
 @app.route("/profile")
 def profile():
-   # Only allow logged-in users
-   if "discordID" not in session:
-       return redirect(url_for("discord.login"))
-   user = {
-       "id": session["discordID"],
-       "name": session["username"],
-       "avatar_url": session["avatarURL"]
-   }
+    if "discordID" not in session:
+        return redirect(url_for("discord.login"))
 
-   personalScores = getPersonalLeaderboard(session["discordID"])
-   timeline = getUserScoreTimeline(session["discordID"])
-   dates = [row["timeSubmitted"] for row in timeline]
-   scores = [row["score"] for row in timeline]
 
-   return render_template("profile.html", user=user, personalScores=personalScores, dates=dates, scores=scores)
+    user = {
+
+        "id": session["discordID"],
+
+        "name": session["username"],
+
+        "avatar_url": session["avatarURL"]
+
+    }
+
+    personalScores = getPersonalLeaderboard(session["discordID"])
+
+    scoresByGame = {}
+
+    for row in personalScores:
+
+        game = row["gameType"]
+
+        if game not in scoresByGame:
+            scoresByGame[game] = {
+
+                "dates": [],
+
+                "scores": []
+
+            }
+
+        # 👇 convert datetime → string (JSON safe)
+
+        scoresByGame[game]["dates"].append(
+
+            row["timeSubmitted"][:10]  # YYYY-MM-DD
+
+        )
+
+        scoresByGame[game]["scores"].append(row["score"])
+
+    return render_template(
+
+        "profile.html",
+
+        user=user,
+
+        personalScores=personalScores,
+
+        scoresByGame=scoresByGame
+
+    )
+
 
 @app.route("/submitScore", methods=["GET", "POST"])
 def submitScore():
@@ -102,49 +141,86 @@ def submitScore():
     if request.method == "POST":
 
         game = request.form.get("game")
+
         score = request.form.get("score", type=int)
-        date_achieved = request.form.get("date_achieved")
-        player_name = request.form.get("player_name") if isAdmin else session["username"]
-        link = request.form.get("link") if isAdmin else ""
+
+        destination = request.form.get("destination", "personal")
+
         notes = request.form.get("notes") or ""
+
+        player_name = request.form.get("player_name") if isAdmin else session["username"]
+
+        link = request.form.get("link") if isAdmin else ""
 
         minimumScores = {
 
             "Tetris.com": 1500000,
+
             "MindBender": 500000,
+
             "E60": 100000,
+
             "NBlox": 1000000
+
         }
 
-        # Admin submissions must meet minimum score
-
-        if isAdmin and game in minimumScores and score < minimumScores[game]:
-            flash(f"The score does not meet the minimum for {game}")
+        if not game or score is None:
+            flash("Please fill in all required fields", "warning")
 
             return redirect(url_for("submitScore"))
 
-        # Admin submissions require a player name and link
+        if isAdmin and destination == "official":
 
-        if isAdmin and (not player_name or not link):
-            flash("Admin submissions require a player name and a proof link")
+            if game in minimumScores and score < minimumScores[game]:
+                flash(f"The score does not meet the minimum for {game}", "warning")
 
-            return redirect(url_for("submitScore"))
+                return redirect(url_for("submitScore"))
 
-        # Submit the score
+            if not player_name or not link:
+                flash("Admin submissions require a player name and a proof link", "warning")
 
-        submitOfficialLeaderboard(
+                return redirect(url_for("submitScore"))
 
-            username=player_name,
+            submitOfficialLeaderboard(
+
+                username=player_name,
+
+                score=score,
+
+                link=link,
+
+                gameType=game,
+
+                submittedBy=session["username"],
+
+                notes=notes
+
+            )
+
+            flash("Score submitted to official leaderboard!", "success")
+
+            return redirect(url_for("leaderboard"))
+
+        # Personal scores (admins + normal users)
+
+        submitPersonalScores(
+
+            discordID=session["discordID"],
+
             score=score,
-            link=link,
+
             gameType=game,
-            submittedBy=session["username"],
+
             notes=notes
 
         )
 
-        flash("Score submitted successfully!")
-        return redirect(url_for("leaderboard"))
+        flash("Score added to your personal profile!", "success")
+
+        return redirect(url_for("profile"))
+
+    # GET request
+
     return render_template("submit_score.html")
 
 
@@ -181,6 +257,31 @@ def deleteScore():
 @app.route("/about")
 def about():
    return render_template("about.html")
+
+@app.route("/deletePersonalScore", methods=["POST"])
+def deletePersonalScore():
+    if "discordID" not in session:
+        return redirect(url_for("login"))
+
+    scoreID = request.form.get("scoreID")
+    if not scoreID:
+        flash("Invalid Request", "warning")
+        return redirect(url_for("profile"))
+
+    try:
+        scoreID = int(scoreID)
+    except valueError:
+        flash("Invalid Score ID", "warning")
+        return redirect(url_for("profile"))
+
+    deleted = deletePersonalScoreForUser(session["discordID"], scoreID)
+
+    if deleted:
+        flash("Score is deleted.", "success")
+    else:
+        flash("Score couldn't be found or was already deleted", "warning")
+
+    return redirect(url_for("profile"))
 
 # --- Login / Logout ---
 @app.route("/login")
