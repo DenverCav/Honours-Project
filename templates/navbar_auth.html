@@ -1,11 +1,38 @@
 {% if not logged_in %}
-    <a class="btn btn-primary" href="{{ url_for('login') }}"
-       onclick="this.innerText='Logging in'; this.classList.add('disabled');">
-        Login
-    </a>
+<a class="btn btn-primary"
+   href="{{ url_for('login') }}"
+   onclick="this.innerText='Logging in…'; this.classList.add('disabled');">
+    Login
+</a>
+
 {% else %}
-    <a href="{{ url_for('logout') }}">
-        <img src="{{ user_pfp or url_for('static', filename='images/Null.png') }}"
-             alt="Log out" class="rounded-circle" width="35" height="35">
-    </a>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle d-flex align-items-center"
+       href="#"
+       id="profileDropdown"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+<img src="{{ user_pfp or url_for('static', filename='images/Null.png') }}"
+             alt="Profile"
+             class="rounded-circle"
+             width="35"
+             height="35">
+</a>
+<ul class="dropdown-menu dropdown-menu-end"
+    aria-labelledby="profileDropdown">
+<li>
+<a class="dropdown-item" href="{{ url_for('profile') }}">
+    Profile
+</a>
+</li>
+<li><hr class="dropdown-divider"></li>
+<li>
+<a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+    Log out
+</a>
+</li>
+</ul>
+</li>
+
 {% endif %}
