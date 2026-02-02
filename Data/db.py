@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import pandas as pd
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -79,7 +78,7 @@ def getUserByID(discordID):
     return user
 
 
-def getLeaderboardFromGame(game=None):
+def getLeaderboardFromGame(game=None): # This displays the leaderboard entries depending on which game is selected
    conn = getConnection()
    command = conn.cursor()
    if game:
@@ -126,13 +125,7 @@ def getAllGames():
    # Filter out None and sort nicely
    games = [row["gameType"] for row in rows if row["gameType"]]
    return games
-def tempLeaderboardData():
-# Placeholder leaderboard data
-    leaderboard_data = [
-       {"username": "Ace", "score": 3600000, "game": "Tetris.com"},
-       {"username": "Denver", "score": 3300000, "game": "Tetris.com"}
-   ]
-    return leaderboard_data or []
+
 
 def submitOfficialLeaderboard(username, score, link, gameType, submittedBy, notes=""):
     conn = getConnection()
@@ -189,27 +182,56 @@ def getPersonalLeaderboard(discordID):
     timeSubmitted
     FROM personalLeaderboard
     WHERE discordID = ?
+    ORDER BY timeSubmitted ASC
     """, (discordID, ))
 
     rows = command.fetchall()
     conn.close()
     return [dict(row) for row in rows]
 
-def submitPersonalScores(discordID, score, gameType, notes):
+
+def submitPersonalScores(discordID, score, gameType, notes, date_achieved=None):
     conn = getConnection()
     command = conn.cursor()
-    command.execute("""
-    INSERT INTO personalLeaderboard (
-    discordID,
-    score,
-    gameType,
-    notes
-    )
-    VALUES (?, ?, ?, ?)""",
-    (discordID, score, gameType, notes)
-    )
+
+    if date_achieved:
+
+        command.execute("""
+            INSERT INTO personalLeaderboard (
+                discordID,
+                score,
+                gameType,
+                notes,
+                timeSubmitted
+            )
+            VALUES (?, ?, ?, ?, ?)""", (
+            discordID,
+            score,
+            gameType,
+            notes,
+            date_achieved
+
+        ))
+
+    else:
+
+        command.execute("""
+            INSERT INTO personalLeaderboard (
+                discordID,
+                score,
+                gameType,
+                notes
+            )
+            VALUES (?, ?, ?, ?)""", (
+            discordID,
+            score,
+            gameType,
+            notes
+
+        ))
     conn.commit()
     conn.close()
+
 
 def deleteExactScore(username, score, gameType):
     conn = getConnection()
@@ -226,7 +248,7 @@ def deleteExactScore(username, score, gameType):
 
     return rowsDeleted > 0
 
-def getDebug():
+def getDebug(): # This is for my debug page when I'm trying te check if information is actually being uplaoded
     conn = getConnection()
     command = conn.cursor()
     command.execute("SELECT discordID, username FROM users")

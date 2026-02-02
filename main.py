@@ -3,7 +3,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
-from Data.db import createDB, getUserByID, insert_user, tempLeaderboardData, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline, deletePersonalScoreForUser # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline, deletePersonalScoreForUser # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
@@ -31,7 +31,7 @@ app.register_blueprint(discord_bp, url_prefix="/login")
 
 # Initialises the database
 #createDB()
-@app.context_processor
+@app.context_processor # This injects variables automatically into templates
 def createUser():
    if "discordID" in session:
        return {
@@ -82,51 +82,34 @@ def profile():
 
 
     user = {
-
         "id": session["discordID"],
-
         "name": session["username"],
-
         "avatar_url": session["avatarURL"]
-
     }
 
     personalScores = getPersonalLeaderboard(session["discordID"])
-
     scoresByGame = {}
 
     for row in personalScores:
-
         game = row["gameType"]
-
         if game not in scoresByGame:
             scoresByGame[game] = {
-
                 "dates": [],
-
                 "scores": []
-
             }
 
 
         scoresByGame[game]["dates"].append(
-
             row["timeSubmitted"][:10]  # YYYY-MM-DD
-
         )
 
         scoresByGame[game]["scores"].append(row["score"])
 
     return render_template(
-
         "profile.html",
-
         user=user,
-
         personalScores=personalScores,
-
         scoresByGame=scoresByGame
-
     )
 
 
@@ -138,87 +121,66 @@ def submitScore():
     isAdmin = checkAdmin(session["discordID"])
 
     if request.method == "POST":
-
         game = request.form.get("game")
-
         score = request.form.get("score", type=int)
-
         destination = request.form.get("destination", "personal")
-
         notes = request.form.get("notes") or ""
 
-        player_name = request.form.get("player_name") if isAdmin else session["username"]
+        date_achieved = request.form.get("date_achieved")
+        if not date_achieved:
+            date_achieved = None
 
+        player_name = request.form.get("player_name") if isAdmin else session["username"]
         link = request.form.get("link") if isAdmin else ""
 
+        # minimumScores is used to ensure that any score that does not meet the community
+        # minimum cannot be uploaded to the leaderboard, making sure that any typos
+        # don't cause problems
         minimumScores = {
-
             "Tetris.com": 1500000,
-
             "MindBender": 500000,
-
             "E60": 100000,
-
             "NBlox": 1000000
-
         }
 
         if not game or score is None:
             flash("Please fill in all required fields", "warning")
-
             return redirect(url_for("submitScore"))
 
         if isAdmin and destination == "official":
 
             if game in minimumScores and score < minimumScores[game]:
                 flash(f"The score does not meet the minimum for {game}", "warning")
-
                 return redirect(url_for("submitScore"))
 
             if not player_name or not link:
                 flash("Admin submissions require a player name and a proof link", "warning")
-
                 return redirect(url_for("submitScore"))
 
             submitOfficialLeaderboard(
-
                 username=player_name,
-
                 score=score,
-
                 link=link,
-
                 gameType=game,
-
                 submittedBy=session["username"],
-
                 notes=notes
-
             )
 
             flash("Score submitted to official leaderboard!", "success")
-
             return redirect(url_for("leaderboard"))
 
         # Personal scores (admins + normal users)
 
         submitPersonalScores(
-
             discordID=session["discordID"],
-
             score=score,
-
             gameType=game,
-
-            notes=notes
-
+            notes=notes,
+            date_achieved=date_achieved
         )
 
         flash("Score added to your personal profile!", "success")
-
         return redirect(url_for("profile"))
-
-    # GET request
 
     return render_template("submit_score.html")
 

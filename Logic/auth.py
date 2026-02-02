@@ -14,6 +14,8 @@ def loginUser():
     session["discordID"] = user_info["id"]
     session["username"] = user_info["username"]
     session["avatarURL"] = f"https://cdn.discordapp.com/avatars/{user_info['id']}/{user_info['avatar']}.png"
+
+    session.modified = True;
     # Insert into database if new
     if not getUserByID(user_info["id"]):
         insert_user(user_info["id"], user_info["username"], session["avatarURL"])
