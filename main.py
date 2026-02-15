@@ -18,7 +18,8 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")  # Session encryption
 discord_bp = make_discord_blueprint(
    client_id=os.getenv("DISCORD_CLIENT_ID"),
    client_secret=os.getenv("DISCORD_CLIENT_SECRET"),
-   scope="identify"
+   scope="identify",
+    redirect_url="/login/complete"
 )
 
 
@@ -249,7 +250,7 @@ def deletePersonalScore():
 def downloadData():
     if "discordID" not in session:
         return redirect(url_for("login"))
-
+    # Gets all the information from the logged in user to ensure that only their data is being downloaded
     discord_id = session["discordID"]
     user = getUserByID(discord_id)
     scores = getPersonalLeaderboard(discord_id)
@@ -283,6 +284,13 @@ def login():
 @app.route("/logout")
 def logout():
    return logoutUser()
+
+
+@app.route("/login/complete")
+def loginComplete():
+    return loginUser()
+
+
 
 @app.route("/debug-session") # I had to add this because for TWO DAYS the login stuff would not work after I added the database and I didn't know why. Eventually I wanted to just figure out if I was remaining logged in, because my UI said I wasn't, and this showed me I was logged in because all my info was there... I don't understand why OAuth has to be so hard
 def debug():
