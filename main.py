@@ -1,8 +1,9 @@
-import os
+import os, csv
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
-from flask import Flask, render_template, redirect, url_for, session, request, flash
+from flask import Flask, render_template, redirect, url_for, session, request, flash, make_response
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
+from io import StringIO
 from Data.db import createDB, getUserByID, insert_user, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline, deletePersonalScoreForUser # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
@@ -231,7 +232,7 @@ def deletePersonalScore():
 
     try:
         scoreID = int(scoreID)
-    except valueError:
+    except ValueError:
         flash("Invalid Score ID", "warning")
         return redirect(url_for("profile"))
 
@@ -243,6 +244,36 @@ def deletePersonalScore():
         flash("Score couldn't be found or was already deleted", "warning")
 
     return redirect(url_for("profile"))
+
+@app.route("/downloadData")
+def downloadData():
+    if "discordID" not in session:
+        return redirect(url_for("login"))
+
+    discord_id = session["discordID"]
+    user = getUserByID(discord_id)
+    scores = getPersonalLeaderboard(discord_id)
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(["username", "game", "score", "date"])
+
+    for score in scores:
+        writer.writerow([
+            score["gameType"],
+            score["score"],
+            score["timeSubmitted"]
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = (
+        "attachment; filename=Personal Scores.csv"
+    )
+
+    return response
+
 
 # --- Login / Logout ---
 @app.route("/login")

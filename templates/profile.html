@@ -18,6 +18,13 @@ content %}
     </div>
 <h3 class="mt-4">My Scores</h3>
 
+    <div class="mt-4">
+        <a href="{{ url_for('downloadData') }}"
+           class="btn btn-outline-secondary btn-sm">
+            Download my data (CSV)
+        </a>
+    </div>
+
 {% if personalScores %}
 <table class="table table-striped table-hover mt-3">
     <thead>
