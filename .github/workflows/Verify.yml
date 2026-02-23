@@ -1,0 +1,37 @@
+name: Pipeline Check
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+      - name: Install project dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Validate application imports
+        run: |
+          python - <<EOF
+          import flask
+          import sqlite3
+          print("Core dependencies imported successfully.")
+          EOF
+      - name: Syntax check main application
+
+        run: |
+
+          python -m py_compile main.py
+ 
