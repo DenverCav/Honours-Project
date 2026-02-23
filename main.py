@@ -19,7 +19,8 @@ discord_bp = make_discord_blueprint(
    client_id=os.getenv("DISCORD_CLIENT_ID"),
    client_secret=os.getenv("DISCORD_CLIENT_SECRET"),
    scope="identify",
-    redirect_url="/login/complete"
+   redirect_url="/login/complete" # I forgot to add this line in originally and always wondered why
+    # the login button needed to be clicked twice
 )
 
 
