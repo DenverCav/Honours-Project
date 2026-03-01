@@ -283,6 +283,23 @@ def deleteExactScore(username, score, gameType):
 
     return rowsDeleted > 0
 
+def getBestScoresByPlayer():  # This is for the Arbitrary Club stuff
+    conn = getConnection()
+    command = conn.cursor()
+
+    command.execute("""
+    SELECT
+        username,
+        gameType,
+        MAX(score) AS bestScore
+    FROM publicLeaderboard
+    GROUP BY username, gameType
+    """)
+
+    rows = command.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
 def getDebug(): # This is for my debug page when I'm trying te check if information is actually being uplaoded
     conn = getConnection()
     command = conn.cursor()

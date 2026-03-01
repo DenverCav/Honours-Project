@@ -1,0 +1,46 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4" style="max-width: 600px">
+    <h2>Delete Score (Admin Only)</h2>
+    <p class="text-muted">
+        To safely remove a score, enter the exact username, game, and score.
+    </p>
+    <form method="post">
+        <div class="mb-3">
+            <label for="username">Player Username</label>
+            <input
+                type="text"
+                class="form-control"
+                name="username"
+                id="username"
+                required
+                placeholder="Exact player name"
+            />
+        </div>
+        <div class="mb-3">
+            <label for="game">Game</label>
+            <select name="game" id="game" class="form-select" required>
+                <option value="" disabled selected>Choose a game</option>
+                <option value="Tetris.com (Untuned)"> Tetris.com (Untuned)</option>
+                <option value="Tetris.com"> Tetris.com </option>
+                <option value="Tetris.com (Tuned)">Tetris.com (Tuned)</option>
+                <option value="MindBender">MindBender</option>
+                <option value="E60">E60</option>
+                <option value="NBlox">N-Blox</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="score">Score</label>
+            <input
+                type="number"
+                class="form-control"
+                name="score"
+                id="score"
+                required
+                placeholder="Exact score to delete"
+            />
+        </div>
+        <button type="submit" class="btn btn-danger mt-3">Delete Score</button>
+    </form>
+</div>
+
+{% endblock %}
