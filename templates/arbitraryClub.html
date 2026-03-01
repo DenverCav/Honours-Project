@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Arbitrary Club{% endblock %}
+{% block content %}
+<div class="container mt-4">
+   <h2>Arbitrary Club Tiers</h2>
+   <p class="text-muted">
+      Based on each player's highest public leaderboard score per game.
+   </p>
+   <table class="table table-bordered table-hover mt-3">
+      <thead>
+         <tr>
+            <th>Player</th>
+            {% for game in games %}
+            <th>{{ game }}</th>
+            {% endfor %}
+         </tr>
+      </thead>
+      <tbody>
+         {% for player, tiers in matrix.items() %}
+         <tr>
+            <td>{{ player }}</td>
+            {% for game in games %}
+            <td>
+               {% if tiers[game] %}
+               <span class="badge bg-secondary">{{ tiers[game] }}</span>
+               {% else %}
+               —
+               {% endif %}
+            </td>
+            {% endfor %}
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+</div>
+{% endblock %}

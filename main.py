@@ -4,12 +4,12 @@ from flask import Flask, render_template, redirect, url_for, session, request, f
 from flask_dance.contrib.discord import make_discord_blueprint, discord
 from dotenv import load_dotenv
 from io import StringIO
-from Data.db import createDB, getUserByID, insert_user, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline, deletePersonalScoreForUser, permanentlyDeleteUser, markUserForDeletion # My database helper functions
+from Data.db import createDB, getUserByID, insert_user, getDebug, submitOfficialLeaderboard, getLeaderboardFromGame, getAllGames, getPersonalLeaderboard, submitPersonalScores, getAllUsers, deleteExactScore, getUserScoreTimeline, deletePersonalScoreForUser, permanentlyDeleteUser, markUserForDeletion, getBestScoresByPlayer # My database helper functions
 load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
 from Logic.isAdmin import ADMIN_IDS, checkAdmin
-
+from Logic.arbitraryClub import getArbitraryTiers
 
 
 app = Flask(__name__)
@@ -224,6 +224,39 @@ def deleteScore():
 @app.route("/about")
 def about():
    return render_template("about.html")
+
+
+@app.route("/arbitraryClub")
+def arbitraryClub():
+    rawData = getBestScoresByPlayer()
+
+    games = ["Tetris.com (Untuned)", "Tetris.com (Tuned)", "MindBender", "E60", "NBlox"]
+
+    matrix = {}
+
+    for row in rawData:
+
+        player = row["username"]
+
+        game = row["gameType"]
+
+        score = row["bestScore"]
+
+        tier = getArbitraryTiers(game, score)
+
+        if player not in matrix:
+            matrix[player] = {g: None for g in games}
+
+        matrix[player][game] = tier
+
+    return render_template(
+        "arbitraryClub.html",
+        matrix=matrix,
+        games=games
+
+    )
+
+
 
 @app.route("/deletePersonalScore", methods=["POST"])
 def deletePersonalScore():
