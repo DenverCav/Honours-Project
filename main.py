@@ -10,6 +10,8 @@ from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
 from Logic.isAdmin import ADMIN_IDS, checkAdmin
 from Logic.arbitraryClub import getArbitraryTiers
+from Logic.profileLogic import getProfileData
+from Logic.score import processScoreDeletion, processScoreSubmission, processPersonalScoreDeletion
 
 
 app = Flask(__name__)
@@ -90,31 +92,12 @@ def profile():
         "avatar_url": session["avatarURL"]
     }
 
-    personalLeaderboard = getPersonalLeaderboard(session["discordID"])
-    scoresByGame = {}
-
-
-
-    for row in personalLeaderboard:
-        game = row["gameType"]
-
-        if game not in scoresByGame:
-            scoresByGame[game] = {
-                "dates": [],
-                "scores": []
-            }
-
-
-        scoresByGame[game]["dates"].append(
-            row["timeSubmitted"][:10]  # YYYY-MM-DD
-        )
-
-        scoresByGame[game]["scores"].append(row["score"])
+    personalScores, scoresByGame = getProfileData(session["discordID"])
 
     return render_template(
         "profile.html",
         user=user,
-        personalScores=personalLeaderboard,
+        personalScores=personalScores,
         scoresByGame=scoresByGame
     )
 
@@ -131,62 +114,26 @@ def submitScore():
         score = request.form.get("score", type=int)
         destination = request.form.get("destination", "personal")
         notes = request.form.get("notes") or ""
-
-        date_achieved = request.form.get("date_achieved")
-        if not date_achieved:
-            date_achieved = None
-
+        date_achieved = request.form.get("date_achieved") or None
         player_name = request.form.get("player_name") if isAdmin else session["username"]
         link = request.form.get("link") if isAdmin else ""
 
-        # minimumScores is used to ensure that any score that does not meet the community
-        # minimum cannot be uploaded to the leaderboard, making sure that any typos
-        # don't cause problems
-        minimumScores = {
-            "Tetris.com": 1500000,
-            "MindBender": 500000,
-            "E60": 100000,
-            "NBlox": 1000000
-        }
-
-        if not game or score is None:
-            flash("Please fill in all required fields", "warning")
-            return redirect(url_for("submitScore"))
-
-        if isAdmin and destination == "official":
-
-            if game in minimumScores and score < minimumScores[game]:
-                flash(f"The score does not meet the minimum for {game}", "warning")
-                return redirect(url_for("submitScore"))
-
-            if not player_name or not link:
-                flash("Admin submissions require a player name and a proof link", "warning")
-                return redirect(url_for("submitScore"))
-
-            submitOfficialLeaderboard(
-                username=player_name,
-                score=score,
-                link=link,
-                gameType=game,
-                submittedBy=session["username"],
-                notes=notes
-            )
-
-            flash("Score submitted to official leaderboard!", "success")
-            return redirect(url_for("leaderboard"))
-
-        # Personal scores (admins + normal users)
-
-        submitPersonalScores(
-            discordID=session["discordID"],
-            score=score,
-            gameType=game,
-            notes=notes,
-            date_achieved=date_achieved
+        status, message, redirectPage = processScoreSubmission(
+            session["discordID"],
+            session["username"],
+            isAdmin,
+            game,
+            score,
+            destination,
+            notes,
+            date_achieved,
+            player_name,
+            link
         )
 
-        flash("Score added to your personal profile!", "success")
-        return redirect(url_for("profile"))
+        flash(message, status)
+
+        return redirect(url_for(redirectPage))
 
     return render_template("submit_score.html")
 
@@ -199,27 +146,25 @@ def deleteScore():
     deleted = None
 
     if request.method == "POST":
-
         username = request.form.get("username", "").strip()
         game = request.form.get("game", "").strip()
         scoreA = request.form.get("score", "").strip()
-
         if not username or not game or not scoreA:
             flash("Fill in all the fields", "warning")
         else:
             try:
                 score = int(scoreA)
             except ValueError:
-                flash("Score must be a number, and without commas", "warning")
+                flash("Score must be a number", "warning")
             else:
-                deleted = deleteExactScore(username=username, gameType=game, score=score)
-
+                deleted = processScoreDeletion(username, game, score)
                 if deleted:
                     flash(f"Deleted {score} points for {username} in {game}", "success")
                 else:
-                    flash("That score couldn't be found. Nothing deleted", "success")
+                    flash("That score couldn't be found.", "warning")
 
     return render_template("delete_score.html")
+
 
 @app.route("/about")
 def about():
@@ -257,31 +202,24 @@ def arbitraryClub():
     )
 
 
-
 @app.route("/deletePersonalScore", methods=["POST"])
 def deletePersonalScore():
     if "discordID" not in session:
         return redirect(url_for("login"))
-
     scoreID = request.form.get("scoreID")
-    if not scoreID:
-        flash("Invalid Request", "warning")
-        return redirect(url_for("profile"))
-
     try:
         scoreID = int(scoreID)
-    except ValueError:
+    except:
         flash("Invalid Score ID", "warning")
         return redirect(url_for("profile"))
 
-    deleted = deletePersonalScoreForUser(session["discordID"], scoreID)
-
+    deleted = processPersonalScoreDeletion(session["discordID"], scoreID)
     if deleted:
         flash("Score is deleted.", "success")
     else:
-        flash("Score couldn't be found or was already deleted", "warning")
-
+        flash("Score couldn't be found.", "warning")
     return redirect(url_for("profile"))
+
 
 @app.route("/downloadData")
 def downloadData():
