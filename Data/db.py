@@ -79,34 +79,47 @@ def getUserByID(discordID):
 
 
 def getLeaderboardFromGame(game=None): # This displays the leaderboard entries depending on which game is selected
-   conn = getConnection()
-   command = conn.cursor()
-   if game:
-       command.execute("""
-       SELECT *
-       FROM publicLeaderboard
-       WHERE id IN (
-           SELECT MAX(id)
+
+        conn = getConnection()
+        command = conn.cursor()
+
+        if game == "combined":
+            command.execute("""
+           SELECT *
            FROM publicLeaderboard
-           WHERE gameType = ?
-           GROUP BY username
-       )
-       ORDER BY score DESC
-       """, (game,))
-   else:
-       command.execute("""
-       SELECT *
-       FROM publicLeaderboard
-       WHERE id IN (
-           SELECT MAX(id)
+           WHERE gameType IN ('Tetris.com (Untuned)', 'Tetris.com (Tuned)')
+           ORDER BY score DESC
+           """)
+
+        elif game:
+            command.execute("""
+           SELECT *
            FROM publicLeaderboard
-           GROUP BY username, gameType
-       )
-       ORDER BY score DESC
-       """)
-   rows = command.fetchall()
-   conn.close()
-   return [dict(row) for row in rows]
+           WHERE id IN (
+               SELECT MAX(id)
+               FROM publicLeaderboard
+               WHERE gameType = ?
+               GROUP BY username
+           )
+           ORDER BY score DESC
+           """, (game,))
+
+        else:
+            command.execute("""
+           SELECT *
+           FROM publicLeaderboard
+           WHERE id IN (
+               SELECT MAX(id)
+               FROM publicLeaderboard
+               GROUP BY username, gameType
+           )
+           ORDER BY score DESC
+           """)
+
+        rows = command.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
 
 def getAllUsers():
     conn = getConnection()
