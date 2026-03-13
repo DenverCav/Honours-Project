@@ -61,7 +61,11 @@ def home():
 @app.route("/leaderboard")
 def leaderboard():
    selectedGame = request.args.get("game")
-   leaderboardData = getLeaderboardFromGame(selectedGame)
+
+   if selectedGame == "combined":
+       leaderboardData = getLeaderboardFromGame("combined")
+   else:
+        leaderboardData = getLeaderboardFromGame(selectedGame)
    games = getAllGames()
 
    if not selectedGame or selectedGame == "all":
