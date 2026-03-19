@@ -1,7 +1,7 @@
 import sqlite3
 from db import getConnection
 
-DB_PATH = "Data/database.db"  # change if needed
+DB_PATH = "Data/database.db"
 
 def column_exists(cursor, table, column):
     cursor.execute(f"PRAGMA table_info({table})")

@@ -1,4 +1,4 @@
-import os, csv
+import os, csv, uuid
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash, make_response
 from flask_dance.contrib.discord import make_discord_blueprint, discord
@@ -170,9 +170,16 @@ def deleteScore():
     return render_template("delete_score.html")
 
 
-@app.route("/about")
-def about():
-   return render_template("about.html")
+@app.route("/demo")
+def demo():
+    demoID = f"demo{uuid.uuid4().hex[:0]}"
+
+    session["discordID"] = demoID
+    session["username"] = f"DemoUser{demoID[-4:]}"
+    session["avatarURL"] = "/static/images/Null.png"
+    session["isDemo"] = True
+
+    return redirect(url_for("home"))
 
 
 @app.route("/arbitraryClub")
