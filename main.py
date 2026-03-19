@@ -172,7 +172,7 @@ def deleteScore():
 
 @app.route("/demo")
 def demo():
-    demoID = f"demo{uuid.uuid4().hex[:0]}"
+    demoID = f"demo{uuid.uuid4().hex[:8]}"
 
     session["discordID"] = demoID
     session["username"] = f"DemoUser{demoID[-4:]}"
