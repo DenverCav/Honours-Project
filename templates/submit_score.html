@@ -9,6 +9,7 @@
         viewable in your personal profile. {% endif %}
     </p>
     <form method="post">
+        <input type="hidden" name="csrfToken" value="{{ csrfToken }}">
         <div class="mb-3">
             <!-- Game Dropdown Menu -->
             <label for="game">Game</label>

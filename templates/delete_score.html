@@ -5,6 +5,7 @@
         To safely remove a score, enter the exact username, game, and score.
     </p>
     <form method="post">
+        <input type="hidden" name="csrfToken" value="{{ csrfToken }}">
         <div class="mb-3">
             <label for="username">Player Username</label>
             <input
