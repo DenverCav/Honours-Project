@@ -14,6 +14,7 @@ from Logic.arbitraryClub import getArbitraryTiers
 from Logic.profileLogic import getProfileData
 from Logic.score import processScoreDeletion, processScoreSubmission, processPersonalScoreDeletion
 from Logic.security import validateCSRF, isValidUrl
+from Logic.downloadUserData import getUserPersonalScoresAsCSV
 
 
 app = Flask(__name__)
@@ -254,28 +255,14 @@ def deletePersonalScore():
 def downloadData():
     if "discordID" not in session:
         return redirect(url_for("login"))
-    # Gets all the information from the logged in user to ensure that only their data is being downloaded
-    discord_id = session["discordID"]
-    user = getUserByID(discord_id)
-    scores = getPersonalLeaderboard(discord_id)
 
-    output = StringIO()
-    writer = csv.writer(output)
+    csvData = getUserPersonalScoresAsCSV(session["discordID"])
 
-    writer.writerow(["username", "game", "score", "date"])
+    response = make_response(csvData)
 
-    for score in scores:
-        writer.writerow([
-            score["gameType"],
-            score["score"],
-            score["timeSubmitted"]
-        ])
-
-    response = make_response(output.getvalue())
     response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = (
-        "attachment; filename=Personal Scores.csv"
-    )
+
+    response.headers["Content-Disposition"] = "attachment; filename=Personal Scores.csv"
 
     return response
 
