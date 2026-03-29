@@ -1,4 +1,4 @@
-import os, csv, uuid, secrets, html
+import os, csv, uuid, secrets, html, time
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # For local tessting
 from flask import Flask, render_template, redirect, url_for, session, request, flash, make_response
 from flask_dance.contrib.discord import make_discord_blueprint, discord
@@ -124,8 +124,8 @@ def submitScore():
     isAdmin = checkAdmin(session["discordID"])
 
     if request.method == "POST":
-        #if not validateCSRF():
-            #return "CSRF validation failed", 403
+        if not validateCSRF():
+            return "CSRF validation failed", 403
         game = request.form.get("game")
         score = request.form.get("score", type=int)
         destination = request.form.get("destination", "personal")
@@ -195,6 +195,8 @@ def demo():
     session["username"] = f"DemoUser{demoID[-4:]}"
     session["avatarURL"] = "/static/images/Null.png"
     session["isDemo"] = True
+
+    session["demoCreatedAt"] = time.time()
 
     return redirect(url_for("home"))
 
@@ -293,6 +295,17 @@ def logout():
 def loginComplete():
     return loginUser()
 
+
+@app.before_request
+def checkDemoExpiry():
+    if session.get("isDemo"):
+        created = session.get("demoCreatedAt")
+
+        if created:
+            if time.time() - created > 600: # 10 minutes
+                session.clear()
+                flash("Demo session expired, please start again.", "warning")
+                return redirect(url_for("home"))
 
 @app.after_request
 def add_security_headers(response):
