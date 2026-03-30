@@ -292,8 +292,16 @@ def logout():
 
 
 @app.route("/login/complete")
-def loginComplete():
-    return loginUser()
+def loginComplete(): # This part originally just returned the loginUser() function, but one of my users said that there was a infinite redirect loop when clicking cancel on Discord OAuth, which this new code now fixes
+    success = loginUser()
+
+    if not success:
+        session["loginFailed"] = True
+        flash("Login cancelled.", "warning")
+        return redirect(url_for("home"))
+
+    session.pop("loginFailed", None)
+    return redirect(url_for("home"))
 
 
 @app.before_request
