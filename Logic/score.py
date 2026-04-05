@@ -14,6 +14,9 @@ def processScoreSubmission(
     if not game or score is None:
         return ("warning", "Please fill in all required fields", "submitScore")
 
+    if score is None or score < 0:
+        return "error", "Invalid score", None
+
     if isAdmin and destination == "official":
 
         if game in minimumScores and score < minimumScores[game]:
