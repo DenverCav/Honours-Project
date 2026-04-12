@@ -6,6 +6,29 @@
    <p class="text-muted">
       Based on each player's highest public leaderboard score per game, more information on the Discord.
    </p>
+
+   <div class="mb-3 d-flex gap-2 flex-wrap">
+<!-- Game filter -->
+<select id="gameFilter" class="form-select" style="max-width: 200px;">
+<option value="all">All Games</option>
+
+        {% for game in games %}
+<option value="{{ game }}">{{ game }}</option>
+
+        {% endfor %}
+</select>
+<!-- Tier filter -->
+<select id="tierFilter" class="form-select" style="max-width: 200px;">
+<option value="all">All Tiers</option>
+<option value="Tier 1">Tier 1</option>
+<option value="Tier 2">Tier 2</option>
+<option value="Tier 3">Tier 3</option>
+<option value="Tier 4">Tier 4</option>
+<option value="Tier 5">Tier 5</option>
+<option value="Tier 6">Tier 6</option>
+</select>
+</div>
+
    <table class="table table-bordered table-hover mt-3">
       <thead>
          <tr>
@@ -20,17 +43,72 @@
          <tr>
             <td>{{ player }}</td>
             {% for game in games %}
-            <td>
-               {% if tiers[game] %}
-               <span class="badge bg-secondary">{{ tiers[game] }}</span>
-               {% else %}
-               —
-               {% endif %}
-            </td>
+            <td class="tier-cell"
+
+    data-game="{{ game }}"
+
+    data-tier="{{ tiers[game] }}">
+
+    {% if tiers[game] %}
+<span class="badge tier-{{ tiers[game] | lower | replace(' ', '-') }}">
+
+            {{ tiers[game] }}
+</span>
+
+    {% else %}
+
+        —
+
+    {% endif %}
+</td>
+
             {% endfor %}
          </tr>
          {% endfor %}
       </tbody>
    </table>
 </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const gameFilter = document.getElementById("gameFilter");
+
+    const tierFilter = document.getElementById("tierFilter");
+
+    const cells = document.querySelectorAll(".tier-cell");
+
+function applyFilters() {
+    const selectedGame = gameFilter.value;
+    const selectedTier = tierFilter.value;
+    const rows = document.querySelectorAll("tbody tr");
+    rows.forEach(row => {
+        let rowHasVisibleCell = false;
+        const cells = row.querySelectorAll(".tier-cell");
+        cells.forEach(cell => {
+            const game = cell.dataset.game;
+            const tier = cell.dataset.tier;
+            const gameMatch = selectedGame === "all" || game === selectedGame;
+            const tierMatch = selectedTier === "all" || tier === selectedTier;
+            const shouldShow = gameMatch && tierMatch && tier;
+            if (shouldShow) {
+                cell.style.display = "";
+                rowHasVisibleCell = true;
+            } else {
+                cell.style.display = "none";
+            }
+        });
+        row.style.display = rowHasVisibleCell ? "" : "none";
+    });
+}
+
+
+
+    gameFilter.addEventListener("change", applyFilters);
+
+    tierFilter.addEventListener("change", applyFilters);
+
+});
+</script>
 {% endblock %}

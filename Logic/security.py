@@ -4,7 +4,7 @@ from flask import session, request
 
 def validateCSRF():
     token = request.form.get("csrfToken")
-    return token and token == session.get("csrfToken")
+    return bool (token and token == session.get("csrfToken"))
 
 def isValidUrl(url):
     try:

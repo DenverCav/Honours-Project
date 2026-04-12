@@ -43,6 +43,7 @@ content %}
             <td>
                 <form method="POST" action="{{ url_for('deletePersonalScore') }}" style="display: inline";>
                     <input type="hidden" name="scoreID" value="{{ score.id }}">
+                    <input type="hidden" name="csrfToken" value="{{ csrfToken }}">
                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this score permanently?')">Delete</button>
                 </form>
             </td>
