@@ -1,21 +1,23 @@
 {% extends "base.html" %}
+
 {% block title %}Arbitrary Club{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-   <h2>Arbitrary Club Tiers</h2>
-   <p class="text-muted">
-      Based on each player's highest public leaderboard score per game, more information on the Discord.
-   </p>
+<h2>Arbitrary Club Tiers</h2>
+<p class="text-muted">
 
-   <div class="mb-3 d-flex gap-2 flex-wrap">
+      Based on each player's highest public leaderboard score per game, more information on the Discord.
+</p>
+<div class="mb-3 d-flex gap-2 flex-wrap">
 <!-- Game filter -->
 <select id="gameFilter" class="form-select" style="max-width: 200px;">
 <option value="all">All Games</option>
 
-        {% for game in games %}
+         {% for game in games %}
 <option value="{{ game }}">{{ game }}</option>
 
-        {% endfor %}
+         {% endfor %}
 </select>
 <!-- Tier filter -->
 <select id="tierFilter" class="form-select" style="max-width: 200px;">
@@ -28,46 +30,51 @@
 <option value="Tier 6">Tier 6</option>
 </select>
 </div>
+<table class="table table-bordered table-hover mt-3">
+<thead>
+<tr>
+<th>Player</th>
 
-   <table class="table table-bordered table-hover mt-3">
-      <thead>
-         <tr>
-            <th>Player</th>
             {% for game in games %}
-            <th>{{ game }}</th>
+<th>{{ game }}</th>
+
             {% endfor %}
-         </tr>
-      </thead>
-      <tbody>
+</tr>
+</thead>
+<tbody>
+
          {% for player, tiers in matrix.items() %}
-         <tr>
-            <td>{{ player }}</td>
+<tr>
+<td>{{ player }}</td>
+
             {% for game in games %}
-            <td class="tier-cell"
+<td class="tier-cell"
 
-    data-game="{{ game }}"
+                data-game="{{ game|trim }}"
 
-    data-tier="{{ tiers[game] }}">
+                data-tier="{{ tiers[game] if tiers[game] else '' }}">
 
-    {% if tiers[game] %}
+               {% if tiers[game] %}
 <span class="badge tier-{{ tiers[game] | lower | replace(' ', '-') }}">
 
-            {{ tiers[game] }}
+                  {{ tiers[game] }}
 </span>
 
-    {% else %}
+               {% else %}
 
-        —
+                  —
 
-    {% endif %}
+               {% endif %}
 </td>
 
             {% endfor %}
-         </tr>
+</tr>
+
          {% endfor %}
-      </tbody>
-   </table>
+</tbody>
+</table>
 </div>
+
 
 <script>
 
@@ -77,38 +84,91 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const tierFilter = document.getElementById("tierFilter");
 
-    const cells = document.querySelectorAll(".tier-cell");
+    const headers = document.querySelectorAll("thead th");
 
-function applyFilters() {
-    const selectedGame = gameFilter.value;
-    const selectedTier = tierFilter.value;
     const rows = document.querySelectorAll("tbody tr");
-    rows.forEach(row => {
-        let rowHasVisibleCell = false;
-        const cells = row.querySelectorAll(".tier-cell");
-        cells.forEach(cell => {
-            const game = cell.dataset.game;
-            const tier = cell.dataset.tier;
-            const gameMatch = selectedGame === "all" || game === selectedGame;
-            const tierMatch = selectedTier === "all" || tier === selectedTier;
-            const shouldShow = gameMatch && tierMatch && tier;
-            if (shouldShow) {
-                cell.style.display = "";
-                rowHasVisibleCell = true;
+
+    function applyFilters() {
+
+        const selectedGame = gameFilter.value;
+
+        const selectedTier = tierFilter.value;
+
+        // Column index starts at 1 because 0 = Player column
+
+        const gameColumns = headers.length;
+
+        // STEP 1: HANDLE COLUMN VISIBILITY + HEADER TEXT
+
+        headers.forEach((th, index) => {
+
+            if (index === 0) return; // skip Player column
+
+            const gameName = th.textContent.trim();
+
+            if (selectedGame === "all") {
+
+                th.style.display = "";
+
             } else {
-                cell.style.display = "none";
+
+                th.style.display = (gameName === selectedGame) ? "" : "none";
+
             }
+
         });
-        row.style.display = rowHasVisibleCell ? "" : "none";
-    });
-}
 
+        // STEP 2: HANDLE ROW CELLS
 
+        rows.forEach(row => {
+
+            let rowMatch = false;
+
+            const cells = row.querySelectorAll(".tier-cell");
+
+            cells.forEach(cell => {
+
+                const game = cell.dataset.game.trim();
+
+                const tier = cell.dataset.tier.trim();
+
+                const gameMatch =
+
+                    selectedGame === "all" || game === selectedGame;
+
+                const tierMatch =
+
+                    selectedTier === "all" || tier === selectedTier;
+
+                const shouldShow = gameMatch && tierMatch;
+
+                // hide/show cell
+
+                cell.style.display = shouldShow ? "" : "none";
+
+                if (shouldShow) {
+
+                    rowMatch = true;
+
+                }
+
+            });
+
+            // only hide row if nothing matches tier filter
+
+            row.style.display = rowMatch ? "" : "none";
+
+        });
+
+    }
 
     gameFilter.addEventListener("change", applyFilters);
 
     tierFilter.addEventListener("change", applyFilters);
 
+    applyFilters();
+
 });
 </script>
+
 {% endblock %}

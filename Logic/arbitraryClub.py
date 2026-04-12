@@ -2,6 +2,23 @@
 # split up the category in an informal way to add in tiers. This is why I called it arbitrary
 # even though that's what it's called by the community.
 
+def normaliseGame(game):
+    mapping = {
+
+        "Tetris.com (Untuned)": "Tetris.com",
+
+        "Tetris.com (Tuned)": "Tetris.com",
+
+        "MindBender": "MindBender",
+
+        "E60": "E60",
+
+        "NBlox": "NBlox"
+
+    }
+
+    return mapping.get(game, game)
+
 def getArbitraryTiers(game, score):
     if score is None:
         return None
@@ -91,3 +108,4 @@ def getArbitraryTiers(game, score):
     for tier, threshold in reversed(tiers[ruleKey]):
         if score >= threshold:
             return tier
+

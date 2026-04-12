@@ -10,7 +10,7 @@ load_dotenv()
 from Logic.auth import loginUser, logoutUser
 from Logic.session import createUser
 from Logic.isAdmin import ADMIN_IDS, checkAdmin
-from Logic.arbitraryClub import getArbitraryTiers
+from Logic.arbitraryClub import getArbitraryTiers, normaliseGame
 from Logic.profileLogic import getProfileData
 from Logic.score import processScoreDeletion, processScoreSubmission, processPersonalScoreDeletion
 from Logic.security import validateCSRF, isValidUrl
