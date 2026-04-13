@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 
 <!-- Info flash container -->
 <div id="info-flash-container" class="container mt-3"></div>
@@ -65,6 +66,7 @@
 
             {% endif %}
             <td class="text-center">
+                <!-- This line: data-info="Submitted by {{ entry.submittedBy | e }}" stores the dynamic text safely using Jinja2's escape filter. Preventing XSS attacks and allows JS to read it later. -->
                 <span
                     class="info-emoji"
                     data-info="Submitted by {{ entry.submittedBy | e }}"
@@ -112,8 +114,12 @@
     document.addEventListener("DOMContentLoaded", function () {
         const flashContainer = document.getElementById("info-flash-container");
 
+
+        // Instead of having a listener to every emoji, the page listens to the document and checks for clicks dynamically
         document.addEventListener("click", function (event) {
+        // Finds the closest clicked element with the class
             const emoji = event.target.closest(".info-emoji");
+            // Ignores the click if it wasn't on an emoji
             if (!emoji) return;
 
             const info = emoji.dataset.info;
@@ -121,8 +127,8 @@
 
             flashContainer.innerHTML = "";
 
-            const alertDiv = document.createElement("div");
-            alertDiv.className = "alert alert-info alert-dismissible fade";
+            const alertDiv = document.createElement("div"); // Creates an alert in JS instead of making it in HTMl beforehand
+            alertDiv.className = "alert alert-info alert-dismissible fade"; // Uses Bootstrap to have a little fade animation
             alertDiv.setAttribute("role", "alert");
             alertDiv.innerHTML = `
                 ${info}
@@ -131,6 +137,7 @@
 
             flashContainer.appendChild(alertDiv);
 
+            // Makes the browser render first, then shows so that the fade in will work properly.
             requestAnimationFrame(() => {
             alertDiv.classList.add("show");
             });
@@ -140,6 +147,7 @@
                 block: "start"
             });
 
+            // Starts fadeout after four seconds, animation is waited to be completed before it is removed from the DOM
             setTimeout(() => {
                 alertDiv.classList.remove("show");
                 alertDiv.classList.add("fade");

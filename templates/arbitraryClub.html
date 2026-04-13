@@ -1,174 +1,173 @@
-{% extends "base.html" %}
-
-{% block title %}Arbitrary Club{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Arbitrary Club{% endblock %} {% block
+content %}
 <div class="container mt-4">
-<h2>Arbitrary Club Tiers</h2>
-<p class="text-muted">
-
-      Based on each player's highest public leaderboard score per game, more information on the Discord.
-</p>
-<div class="mb-3 d-flex gap-2 flex-wrap">
-<!-- Game filter -->
-<select id="gameFilter" class="form-select" style="max-width: 200px;">
-<option value="all">All Games</option>
-
-         {% for game in games %}
-<option value="{{ game }}">{{ game }}</option>
-
-         {% endfor %}
-</select>
-<!-- Tier filter -->
-<select id="tierFilter" class="form-select" style="max-width: 200px;">
-<option value="all">All Tiers</option>
-<option value="Tier 1">Tier 1</option>
-<option value="Tier 2">Tier 2</option>
-<option value="Tier 3">Tier 3</option>
-<option value="Tier 4">Tier 4</option>
-<option value="Tier 5">Tier 5</option>
-<option value="Tier 6">Tier 6</option>
-</select>
-</div>
-<table class="table table-bordered table-hover mt-3">
-<thead>
-<tr>
-<th>Player</th>
+    <h2>Arbitrary Club Tiers</h2>
+    <p class="text-muted">
+        Based on each player's highest public leaderboard score per game, more
+        information on the
+        <a href="https://discord.gg/xWUdHa3vH2"> Discord. </a>
+    </p>
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+        <!-- Game filter -->
+        <select id="gameFilter" class="form-select" style="max-width: 200px">
+            <option value="all">All Games</option>
 
             {% for game in games %}
-<th>{{ game }}</th>
+            <option value="{{ game }}">{{ game }}</option>
 
             {% endfor %}
-</tr>
-</thead>
-<tbody>
+        </select>
+        <!-- Tier filter -->
+        <select id="tierFilter" class="form-select" style="max-width: 200px">
+            <option value="all">All Tiers</option>
+            <option value="Tier 1">Tier 1</option>
+            <option value="Tier 2">Tier 2</option>
+            <option value="Tier 3">Tier 3</option>
+            <option value="Tier 4">Tier 4</option>
+            <option value="Tier 5">Tier 5</option>
+            <option value="Tier 6">Tier 6</option>
+        </select>
+    </div>
+    <table class="table table-bordered table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Player</th>
 
-         {% for player, tiers in matrix.items() %}
-<tr>
-<td>{{ player }}</td>
+                {% for game in games %}
+                <th>{{ game }}</th>
 
-            {% for game in games %}
-<td class="tier-cell"
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for player, tiers in matrix.items() %}
+            <tr>
+                <td>{{ player }}</td>
 
-                data-game="{{ game|trim }}"
+                {% for game in games %}
+                <!-- Stores the game name directly to the element so javascript can filter it later -->
+                <td
+                    class="tier-cell"
+                    data-game="{{ game|trim }}"
+                    data-tier="{{ tiers[game] if tiers[game] else '' }}"
+                >
+                    {% if tiers[game] %}
 
-                data-tier="{{ tiers[game] if tiers[game] else '' }}">
+                    <!-- Converts Tier 1 to Tier-1, so it can be a CSS class, allowing each tier to be filtered separately. -->
+                    <span
+                        class="badge tier-{{ tiers[game] | lower | replace(' ', '-') }}"
+                    >
+                        {{ tiers[game] }}
+                    </span>
 
-               {% if tiers[game] %}
-<span class="badge tier-{{ tiers[game] | lower | replace(' ', '-') }}">
+                    {% else %} — {% endif %}
+                </td>
 
-                  {{ tiers[game] }}
-</span>
-
-               {% else %}
-
-                  —
-
-               {% endif %}
-</td>
+                {% endfor %}
+            </tr>
 
             {% endfor %}
-</tr>
-
-         {% endfor %}
-</tbody>
-</table>
+        </tbody>
+    </table>
 </div>
-
 
 <script>
+    // Waits until the page is fully loaded before running the javascript, stops errors if the elements don't exist yet
+    document.addEventListener("DOMContentLoaded", function () {
 
-document.addEventListener("DOMContentLoaded", function () {
+        const gameFilter = document.getElementById("gameFilter");
 
-    const gameFilter = document.getElementById("gameFilter");
+        const tierFilter = document.getElementById("tierFilter");
 
-    const tierFilter = document.getElementById("tierFilter");
+        // Headers and rows gets all the elements so the visibility can be changed dynamically when filtering
 
-    const headers = document.querySelectorAll("thead th");
+        const headers = document.querySelectorAll("thead th");
 
-    const rows = document.querySelectorAll("tbody tr");
+        const rows = document.querySelectorAll("tbody tr");
 
-    function applyFilters() {
+        function applyFilters() { // Runs whenever a filter changes, controls both the columns and rows
 
-        const selectedGame = gameFilter.value;
+            const selectedGame = gameFilter.value;
 
-        const selectedTier = tierFilter.value;
+            const selectedTier = tierFilter.value;
 
-        // Column index starts at 1 because 0 = Player column
+            // Column index starts at 1 because 0 = Player column
 
-        const gameColumns = headers.length;
+            const gameColumns = headers.length;
 
-        // STEP 1: HANDLE COLUMN VISIBILITY + HEADER TEXT
+            // STEP 1: HANDLE COLUMN VISIBILITY + HEADER TEXT
 
-        headers.forEach((th, index) => {
+            headers.forEach((th, index) => { // Players column is the first one which should never be hidden
 
-            if (index === 0) return; // skip Player column
+                if (index === 0) return; // skip Player column
 
-            const gameName = th.textContent.trim();
+                const gameName = th.textContent.trim(); // Takes the text of the column header, used to match against the game filter chosen
 
-            if (selectedGame === "all") {
+                if (selectedGame === "all") {
 
-                th.style.display = "";
+                    th.style.display = "";
 
-            } else {
+                } else {
 
-                th.style.display = (gameName === selectedGame) ? "" : "none";
-
-            }
-
-        });
-
-        // STEP 2: HANDLE ROW CELLS
-
-        rows.forEach(row => {
-
-            let rowMatch = false;
-
-            const cells = row.querySelectorAll(".tier-cell");
-
-            cells.forEach(cell => {
-
-                const game = cell.dataset.game.trim();
-
-                const tier = cell.dataset.tier.trim();
-
-                const gameMatch =
-
-                    selectedGame === "all" || game === selectedGame;
-
-                const tierMatch =
-
-                    selectedTier === "all" || tier === selectedTier;
-
-                const shouldShow = gameMatch && tierMatch;
-
-                // hide/show cell
-
-                cell.style.display = shouldShow ? "" : "none";
-
-                if (shouldShow) {
-
-                    rowMatch = true;
+                    th.style.display = (gameName === selectedGame) ? "" : "none"; // Show only the selected game column, hide all others by changing the display to none.
 
                 }
 
             });
 
-            // only hide row if nothing matches tier filter
+            // STEP 2: HANDLE ROW CELLS
 
-            row.style.display = rowMatch ? "" : "none";
+            rows.forEach(row => { // Tracks whether any cell in the row matches the filters, if there's none the entries row is hidden.
 
-        });
+                let rowMatch = false;
 
-    }
+                const cells = row.querySelectorAll(".tier-cell"); // Gets all the game cells
 
-    gameFilter.addEventListener("change", applyFilters);
+                cells.forEach(cell => {
 
-    tierFilter.addEventListener("change", applyFilters);
+                    const game = cell.dataset.game.trim(); // Gets the data attributes added in the HTML so JS knows what each cell represents
 
-    applyFilters();
+                    const tier = cell.dataset.tier.trim();
 
-});
+                    // Checks if the cell matches the chosen filters, all is a wild card that matches to everything
+
+                    const gameMatch =
+
+                        selectedGame === "all" || game === selectedGame;
+
+                    const tierMatch =
+
+                        selectedTier === "all" || tier === selectedTier;
+
+                    const shouldShow = gameMatch && tierMatch; // Only shows if both filters match
+
+                    // hide/show cell
+
+                    cell.style.display = shouldShow ? "" : "none";
+
+                    if (shouldShow) { // Shows if the cell matches
+
+                        rowMatch = true;
+
+                    }
+
+                });
+
+                // only hide row if nothing matches tier filter
+
+                row.style.display = rowMatch ? "" : "none";
+
+            });
+
+        }
+
+        gameFilter.addEventListener("change", applyFilters);
+
+        tierFilter.addEventListener("change", applyFilters);
+
+        applyFilters(); // Runs once on page load
+
+    });
 </script>
 
 {% endblock %}

@@ -14,7 +14,6 @@
         </p>
         <form method="post">
             <input type="hidden" name="csrfToken" value="{{ csrfToken }}" />
-            <!-- 🧩 BASIC INFO -->
             <h5 class="mb-3">Game Details</h5>
             <!-- Game -->
             <div class="mb-3">
@@ -164,13 +163,13 @@
 
         const selectedGame = gameSelect.value;
 
-        const minimumScore = minimumScores[selectedGame];
+        const minimumScore = minimumScores[selectedGame]; // Checks the minimum scores for the currently selected game
 
         if (minimumScore) {
 
-            scoreInput.min = minimumScore;
+            scoreInput.min = minimumScore; // Validation so that the user can't submit to low of a score
 
-            scoreInput.placeholder = `Minimum score: ${minimumScore.toLocaleString()}`;
+            scoreInput.placeholder = `Minimum score: ${minimumScore.toLocaleString()}`; // For formatting, adds in commas instead of the whole number like 1500000 which becomes 1,500,000
 
         } else {
 
@@ -190,7 +189,7 @@
 
     const officialFields = document.getElementById("officialFields");
 
-    function toggleOfficialFields() {
+    function toggleOfficialFields() { // Admin tools display
 
         if (officialRadio.checked) {
 
@@ -218,7 +217,7 @@
 
     // Initial toggle
 
-    toggleOfficialFields();
+    toggleOfficialFields(); // Runs the function immediately on page load so non-admin users can't view the admin controls
 </script>
 
 {% endif %}

@@ -1,0 +1,221 @@
+body {
+    background-color: #f9fafb;
+
+    color: #111827;
+
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+
+    line-height: 1.5;
+
+    margin: 0;
+}
+
+
+.container {
+    max-width: 900px;
+}
+
+
+.navbar {
+    background-color: #000000;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.navbar-brand {
+    font-weight: 600;
+
+    color: #ffffff !important;
+
+    transition: color 0.15s ease;
+}
+
+.navbar-brand:hover {
+    color: #aaaaaa !important;
+}
+
+.nav-link {
+    color: #ffffff !important;
+
+    transition: color 0.15s ease;
+}
+
+.nav-link:hover {
+    color: #aaaaaa !important;
+}
+
+
+h1, h2, h3, h4 {
+    font-weight: 600;
+
+    margin-bottom: 0.5em;
+}
+
+
+p {
+    color: #4b5563;
+}
+
+
+.section {
+    background: #ffffff;
+
+    padding: 20px;
+
+    border-radius: 8px;
+
+    border: 1px solid #e5e7eb;
+
+    margin-bottom: 20px;
+}
+
+
+.form-control,
+.form-select {
+    border-radius: 6px;
+
+    border: 1px solid #d1d5db;
+
+    padding: 8px 10px;
+
+    transition: border-color 0.15s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #2563eb;
+
+    box-shadow: none;
+}
+
+
+.btn {
+    border-radius: 6px;
+
+    padding: 8px 14px;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-success {
+    background-color: #16a34a;
+
+    border: none;
+}
+
+.btn-success:hover {
+    background-color: #15803d;
+}
+
+.btn-danger {
+    background-color: #dc2626;
+
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+}
+
+
+.table {
+    background-color: #ffffff;
+
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+.table thead {
+    background-color: #f3f4f6;
+}
+
+.table th {
+    font-weight: 600;
+
+    color: #374151;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.tier-tier-1{
+background-color: #d6d3d1;
+color: #1f2937;}
+
+.tier-tier-2 {
+background-color: #9ca3af;
+color: white;}
+
+.tier-tier-3 {
+background-color: #fbbf24;
+color: #111827;}
+
+.tier-tier-4 {
+background-color: #f97316;
+color: white;}
+
+.tier-tier-5{
+background-color: #60a5fa;
+color: white;}
+
+.tier-tier-6{
+background-color: #a78bfa;
+color: white;}
+
+.alert {
+transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.alert.fade {
+transform: translateY(-5px);
+}
+
+
+a {
+    color: #2563eb;
+
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+.mt-4 {
+    margin-top: 1.5rem !important;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+
+footer {
+    background-color: transparent;
+
+    color: #6b7280;
+
+    font-size: 0.9rem;
+}
+
+
+.info-emoji {
+    cursor: pointer;
+
+    opacity: 0.7;
+}
+
+.info-emoji:hover {
+    opacity: 1;
+}
